@@ -1,0 +1,21 @@
+`ALL-Bcell_list` <- readRDS("E:/Studium/4. FS/Bioinfo05/project-05-group-01/ALL-Bcell_list.RDS") #Auslesen der Liste mit den Methylierungsdaten über Dateipfad (hier der auf meinem PC)
+View(`ALL-Bcell_list`) # Tabelle in R-Studio anzeigen lassen
+View(`ALL-Bcell_list`[["promoters"]]) # Nur die Tabelle der Promoter-daten anzeigen lassen
+View(`ALL-Bcell_list`[["promoters"]][["Chromosome"]]) # Nur die Spalte "Chromosome" angezeigt
+`ALL-Bcell_list`[["promoters"]] # Tabelle in Console angezeigt (da viele Daten nicht empfehlenswert)
+
+# Ich persönlich habe die Datei der Liste in ALLBcell umbenannt im Dateinverzeichnis weil kürzer und einfacher
+
+colnames(ALLBcell[["promoters"]]) # Anzeigen aller Spaltenbezeichnungen der Liste "Promoters"
+rownames(ALLBcell[["promoters"]]) # Anzeigen aller Zeilenbezeichnungen der Liste "Promoters"
+dim(ALLBcell) # Anzeige der Dimensionen der Datenmatrix
+
+ALLBcell[["promoters"]] -> ALLpromotor # Zusammenfassen einzig der Promotersaten der Gesamtdatei unter einer Tabelle "ALLpromotor", damit man nicht jedes Mal den Pfad über ALLBcell[["promoters"]] angeben muss
+
+ALLpromotor$CpG # Anzeigen aller Daten unter der Spalte "CpG" (Spalten hinter "$" auswählbar)
+ALLpromotor[,"CpG"] # Anzeigen der Spalte "CpG" mit allen Zeilen (Äquivalent zu "$")
+ALLpromotor[,3] # Anzeige der 3. Spalte mit allen Zeilen (Äquivalent zu "$")
+ALLpromotor[3,] # Anzeige der 3. Zeile mit allen Spalten
+ALLpromotor[3,"CpG"] # Anzeigen des Wertes der Spalte "CpG" in Zeile 3
+
+ALLpromotor$symbol <- NULL # Setzt alle Werte in Spalte "symbol" auf 0, woraufhin sie aus dem Datensatz gelöscht werden (gleiches Verfahren bei "entrezID", "GC", "C", "G", "Strand")
