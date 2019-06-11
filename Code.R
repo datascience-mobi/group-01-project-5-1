@@ -1,5 +1,7 @@
 # Daten auslesen und Matrizen erstellen, mit denen gearbeitet wird
-`ALLBcell` <- readRDS("E:/Studium/4. FS/Bioinfo05/project-05-group-01/ALL-Bcell_list.RDS")
+`ALLBcell` <- readRDS("ALL-Bcell_list.RDS.gz")
+ALLpromotor <- ALLBcell[["promoters"]] 
+ALLpromotor <- ALLpromotor[,c(-4,-5,-6,-8,-9,-10)] # Spalten "Strand", "symbol", "entrezID", "GC", "C", "G" gelöscht
 ALLpromotorCov <- ALLpromotor[,c(15:24)]  # Nur Coverage Daten
 ALLCovMeans <- rowMeans(ALLpromotorCov)   # Liste mit Mittelwert der Coverage pro Genabschnitt
 ALLCovMeansLog <- log(ALLCovMeans)        # Bildung Logarithmus für Plot
@@ -29,7 +31,7 @@ for(i in 1:nrow(ALLpromotorCov1)){                      # Abtasten der Zeilen
      } 
 }
 
-# Selbst bei Grenze von 99% 3 Gene mit komplett NA (p73, APAF1, LATS1) deshalb diese entfernt
+# Selbst bei Grenze von 99% 3 Gene mit komplett NA (p73, APAF1, LATS1) 
 
 # Isolieren der relevanten Gene (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PRKN, PTEN)
 ALLCovGen <- ALLpromotorCov[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),]
@@ -40,8 +42,8 @@ ALLBetaGen <- ALLpromotorBeta[c("ENSG00000039068","ENSG00000078900","ENSG0000014
 sum(!is.na(ALLpromotorCov)) # Summe aller Variablen in der Matrix die nicht NAs sind
 'rejectTotal' <- (1-(sum(!is.na(ALLpromotorCov1))/sum(!is.na(ALLpromotorCov)))) # Prozentsatz der verworfenen Daten insgesammt
 'reject' <- (1-(sum(!is.na(ALLCov1Gen))/sum(!is.na(ALLCovGen)))) # Prozentsatz der verworfenen Daten relevanter Gene
-verworfenGes # Ausgabe
-verworfen # Ausgabe
+rejectTotal # Ausgabe
+reject # Ausgabe
 View(ALLBetaGen) # Direkt schauen wie viele Gene/Werte NA
 
 # Grenze letztendlich bei 98,5% (7753) gesetzt, da 10% der Daten verworfen + 2 weitere Gene verworfen (p57, PTEN) -> bester Kompromiss
@@ -55,12 +57,12 @@ for (i in 1:nrow(ALLBetaGen)) {       # Nur relevante Gene
 }
 View(ALLBetaGen) 
 
-for (i in 1:nrow(ALLpromotorBeta)) {       # Alle Gene (dim(start)=59808)
+for (i in 1:nrow(ALLpromotorBeta)) {       # Alle Gene dim(start) = 59808
   if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
     ALLpromotorBeta <- ALLpromotorBeta[-i,]
   }
 }
-dim(ALLpromotorBeta)
+dim(ALLpromotorBeta) # dim(end) = 56138 (6,14% weg)
 
 # NAs durch Mean der Zeile ersetzen
 for (j in 1:nrow(ALLBetaGen)) {       # Nur relevante Gene
