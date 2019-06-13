@@ -49,8 +49,8 @@ for(i in 1:nrow(ALLpromotorCov1)){                      # Abtasten der Zeilen
 }
 
 # Eliminieren Gene mit >=4 NAs bei den disease Patienten  
-for (j in 1:ncol(ALLpromotorBeta)) {
-  for (i in 1:nrow(ALLpromotorBeta)) {       # Alle Gene dim(start) = 59812
+for (i in 1:nrow(ALLpromotorBeta)) {
+  for (j in 1:ncol(ALLpromotorBeta)) {       # Alle Gene dim(start) = 59812
     if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
       ALLpromotorBeta <- ALLpromotorBeta[-i,]
     }
@@ -58,8 +58,8 @@ for (j in 1:ncol(ALLpromotorBeta)) {
 }
 dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
 
-# for (j in 1:ncol(ALLBetaGen)) {  
-#   for (i in 1:nrow(ALLBetaGen)) {       # Nur relevante Gene (Start Anzahl: 14)
+# for (i in 1:nrow(ALLBetaGen)) {  
+#   for (j in 1:ncol(ALLBetaGen)) {       # Nur relevante Gene (Start Anzahl: 14)
 #     if(sum(is.na(ALLBetaGen[i,c(1:5)]))>=4){
 #         ALLBetaGen <- ALLBetaGen[-i,]
 #     }
@@ -68,8 +68,8 @@ dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
 # View(ALLBetaGen) # End Anzahl: 9
 
 # Eliminieren Gene mit >=4 NAs bei den healthy Patienten
-for (j in 1:ncol(ALLpromotorBeta)) {
-  for (i in 1:nrow(ALLpromotorBeta)) {       # Alle Gene dim(start) = 55111
+for (i in 1:nrow(ALLpromotorBeta)) {
+  for (j in 1:ncol(ALLpromotorBeta)) {       # Alle Gene dim(start) = 55111
     if(sum(is.na(ALLpromotorBeta[i,c(6:10)]))>=4){
       ALLpromotorBeta <- ALLpromotorBeta[-i,]
     }
@@ -80,27 +80,40 @@ dim(ALLpromotorBeta) # dim(end) = 54587 (1% weg)
 # Insgesamt disease(7,9%) + healthy (1%) = 8,9% (5225) aller Gene verworfen 
 
 # NAs durch Mean der Zeile ersetzen (nach gesund und krank separiert)
-
-for (j in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
-     for (i in 1:5) {
+for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
+     for (j in 1:5) {
          if(is.na(ALLpromotorBeta[i,j])){
-             rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) -> ALLpromotorBeta1[i,j]
+             ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
          }
      }
  }
-for (j in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
-  for (i in 6:10) {
-    if(is.na(ALLpromotorBeta[i,j])){
-      rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) -> ALLpromotorBeta1[i,j]
+for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
+     for (j in 6:10) {
+         if(is.na(ALLpromotorBeta[i,j])){
+             ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
+         }
+     }
+}
+sum(is.na(ALLpromotorBeta))
+
+# 0 durch 0,00000001 und 1 durch 0,99999999 ersetzen
+ALLpromotorBeta1 <- ALLpromotorBeta
+for (i in 1:nrow(ALLpromotorBeta)) {       
+  for (j in 1:ncol(ALLpromotorBeta)) {
+    if((ALLpromotorBeta[i,j])==0){
+      ALLpromotorBeta[i,j] <- 0.00001 
+    }
+    if((ALLpromotorBeta[i,j])==1){
+      ALLpromotorBeta[i,j] <- 0.99999
     }
   }
 }
 
 # Normalisierung
-ALLMGen <- ALLBetaGen                 # Nur relevante Gene
-for (j in 1:10) {
-     for (i in 1:9) {
-         log2(ALLBetaGen[i,j]/(1-ALLBetaGen[i,j])) -> ALLMGen[i,j]
+ALLMvalue <- ALLpromotorBeta                 # Nur relevante Gene
+for (i in 1:nrow(ALLMvalue)) {
+     for (j in 1:ncol(ALLMvalue)) {
+         ALLMvalue[i,j] <- log2(ALLMvalue[i,j]/(1-ALLMvalue[i,j])) 
      }
 }
-View(ALLMGen)
+View(ALLMvalue)
