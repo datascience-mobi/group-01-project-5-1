@@ -117,3 +117,30 @@ for (i in 1:nrow(ALLMvalue)) {
      }
 }
 View(ALLMvalue)
+
+
+## PCA
+p <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results as an object of class prcomp.
+
+# Plotten der Varianz um Daten zu filtern, mit welchen gearbeitet wird
+pVar <- (p$sdev)^2 # Varianz berechnen
+plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei PC3 -> Nur PC1-3 verwenden
+
+# ggPlot
+  # Bezogen auf Patienten
+pcx12 <- data.frame(p$x[,c(1,2)]) # Matrix zu data.frame 
+pcx12Plot <- ggplot(pcx12, aes(x = PC1, y = PC2)) # Erzeugen ggPlot 
+pcx12Plot + geom_point()
+
+pcx13 <- data.frame(p$x[,c(1,3)])
+pcx13Plot <- ggplot(pcx13, aes(x = PC1, y = PC3)) 
+pcx13Plot + geom_point()
+
+  # Bezogen auf Gene
+pcr12 <- data.frame(p$rotation[,c(1,2)]) 
+pcr12Plot <- ggplot(pcr12, aes(x = PC1, y = PC2))  
+pcr12Plot + geom_point()
+
+pcr13 <- data.frame(p$rotation[,c(1,3)]) #
+pcr132Plot <- ggplot(pcr13, aes(x = PC1, y = PC3))
+pcr13Plot + geom_point()
