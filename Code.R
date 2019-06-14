@@ -24,7 +24,6 @@ ALLpromotorCov1[ALLpromotorCov < 28] <- NA  # Alle Werte unter 1,5% = NA
 # Isolieren der relevanten Gene (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PRKN, PTEN, p73, APAF1, LATS1)
 ALLCovGen <- ALLpromotorCov[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),]
 ALLCov1Gen <- ALLpromotorCov1[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),] 
-ALLBetaGen <- ALLpromotorBeta[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),] 
 
 # Überprüfen wie groß der verworfene Anteil
 sum(!is.na(ALLpromotorCov)) # Summe aller Variablen in der Matrix die nicht NAs sind
@@ -32,7 +31,6 @@ sum(!is.na(ALLpromotorCov)) # Summe aller Variablen in der Matrix die nicht NAs 
 'reject' <- (1-(sum(!is.na(ALLCov1Gen))/sum(!is.na(ALLCovGen)))) # Prozentsatz der verworfenen Daten relevanter Gene
 rejectTotal # Ausgabe
 reject # Ausgabe
-View(ALLBetaGen) # Direkt schauen wie viele Gene/Werte NA
 
 # Bei Grenze von 99% bereits 3 Gene mit komplett NA (p73, APAF1, LATS1)
 # Grenze letztendlich bei 98,5% (7753) gesetzt: 18% der relevanten Gene verworfen -> 5 Gene (p73, APAF1, LATS1, p57, PTEN) -> bester Kompromiss
@@ -96,8 +94,7 @@ for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
 }
 sum(is.na(ALLpromotorBeta))
 
-# 0 durch 0,00000001 und 1 durch 0,99999999 ersetzen
-ALLpromotorBeta1 <- ALLpromotorBeta
+# 0 durch 0,00001 und 1 durch 0,99999 ersetzen
 for (i in 1:nrow(ALLpromotorBeta)) {       
   for (j in 1:ncol(ALLpromotorBeta)) {
     if((ALLpromotorBeta[i,j])==0){
@@ -122,10 +119,6 @@ View(ALLMvalue)
 ## PCA
 p <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results as an object of class prcomp.
 
-# Plotten der Varianz um Daten zu filtern, mit welchen gearbeitet wird
-pVar <- (p$sdev)^2 # Varianz berechnen
-plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei PC3 -> Nur PC1-3 verwenden
-
 # ggPlot
   # Bezogen auf Patienten
 pcx12 <- data.frame(p$x[,c(1,2)]) # Matrix zu data.frame 
@@ -136,11 +129,12 @@ pcx13 <- data.frame(p$x[,c(1,3)])
 pcx13Plot <- ggplot(pcx13, aes(x = PC1, y = PC3)) 
 pcx13Plot + geom_point()
 
-  # Bezogen auf Gene
+  # Bezogen auf Gene (Durchgeführt mir allen Kombinationen und diese Verglichen)
 pcr12 <- data.frame(p$rotation[,c(1,2)]) 
 pcr12Plot <- ggplot(pcr12, aes(x = PC1, y = PC2))  
-pcr12Plot + geom_point()
+pcr12Plot + geom_point()    
 
-pcr13 <- data.frame(p$rotation[,c(1,3)]) #
-pcr132Plot <- ggplot(pcr13, aes(x = PC1, y = PC3))
-pcr13Plot + geom_point()
+# Plotten der Varianz 
+pVar <- (p$sdev)^2 # Varianz berechnen
+plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") 
+
