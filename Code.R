@@ -94,7 +94,7 @@ repeat{
        }
     }
     sum(is.na(ALLpromotorBeta))
-  if(sum(is.na(ALLpromotorBeta)) == 09{
+  if(sum(is.na(ALLpromotorBeta)) == 0{
     break
   }
 }
