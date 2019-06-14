@@ -46,53 +46,58 @@ for(i in 1:nrow(ALLpromotorCov1)){                      # Abtasten der Zeilen
   } 
 }
 
-# Eliminieren Gene mit >=4 NAs bei den disease Patienten  
-for (i in 1:nrow(ALLpromotorBeta)) {
-  for (j in 1:ncol(ALLpromotorBeta)) {       # Alle Gene dim(start) = 59812
-    if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
-      ALLpromotorBeta <- ALLpromotorBeta[-i,]
+repeat{
+    # Eliminieren Gene mit >=4 NAs bei den disease Patienten  
+    for (i in 1:nrow(ALLpromotorBeta)) {
+      for (j in 1:ncol(ALLpromotorBeta)) {       
+        if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
+          ALLpromotorBeta <- ALLpromotorBeta[-i,]
+        }
+      }
     }
-  }
-}
-dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
+    dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
 
-# for (i in 1:nrow(ALLBetaGen)) {  
-#   for (j in 1:ncol(ALLBetaGen)) {       # Nur relevante Gene (Start Anzahl: 14)
-#     if(sum(is.na(ALLBetaGen[i,c(1:5)]))>=4){
-#         ALLBetaGen <- ALLBetaGen[-i,]
-#     }
-#   }
-# }
-# View(ALLBetaGen) # End Anzahl: 9
+    # for (i in 1:nrow(ALLBetaGen)) {  
+    #   for (j in 1:ncol(ALLBetaGen)) {       # Nur relevante Gene (Start Anzahl: 14)
+    #     if(sum(is.na(ALLBetaGen[i,c(1:5)]))>=4){
+    #         ALLBetaGen <- ALLBetaGen[-i,]
+    #     }
+    #   }
+    # }
+    # View(ALLBetaGen) # End Anzahl: 9
 
-# Eliminieren Gene mit >=4 NAs bei den healthy Patienten
-for (i in 1:nrow(ALLpromotorBeta)) {
-  for (j in 1:ncol(ALLpromotorBeta)) {       # Alle Gene dim(start) = 55111
-    if(sum(is.na(ALLpromotorBeta[i,c(6:10)]))>=4){
-      ALLpromotorBeta <- ALLpromotorBeta[-i,]
+    # Eliminieren Gene mit >=4 NAs bei den healthy Patienten
+    for (i in 1:nrow(ALLpromotorBeta)) {
+      for (j in 1:ncol(ALLpromotorBeta)) {       
+        if(sum(is.na(ALLpromotorBeta[i,c(6:10)]))>=4){
+          ALLpromotorBeta <- ALLpromotorBeta[-i,]
+        }
+      }
     }
-  }
-}
-dim(ALLpromotorBeta) # dim(end) = 54587 (1% weg)
+    dim(ALLpromotorBeta) 
 
-# Insgesamt disease(7,9%) + healthy (1%) = 8,9% (5225) aller Gene verworfen 
+    # Insgesamt disease(7,9%) + healthy (1%) = 8,9% (5225) aller Gene verworfen 
 
-# NAs durch Mean der Zeile ersetzen (nach gesund und krank separiert)
-for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
-     for (j in 1:5) {
+    # NAs durch Mean der Zeile ersetzen (nach gesund und krank separiert)
+    for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
+      for (j in 1:5) {
          if(is.na(ALLpromotorBeta[i,j])){
-             ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
+           ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
          }
-     }
- }
-for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
-     for (j in 6:10) {
+       }
+    }
+    for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
+       for (j in 6:10) {
          if(is.na(ALLpromotorBeta[i,j])){
              ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
          }
-     }
+       }
+    }
+    sum(is.na(ALLpromotorBeta))
+  if(sum(is.na(ALLpromotorBeta)) == 09{
+    break
+  }
 }
-sum(is.na(ALLpromotorBeta))
 
 # 0 durch 0,00001 und 1 durch 0,99999 ersetzen
 for (i in 1:nrow(ALLpromotorBeta)) {       
