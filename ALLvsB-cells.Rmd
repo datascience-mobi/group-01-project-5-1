@@ -1,0 +1,231 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+# **Analysis of methylation levels in ALL and B-cell lines**
+
+## by Wiebke Albers, David Steeb, Nina Winkler, Lilian Dorner
+
+### Introduction
+
+**DNA methylation**
+
+One of the cells regulatory mechanisms for switching genes on and off is methylation of cytosines in promotor or coding regions. The enzymes responsible for this methylation only recognize cytosines which are followed by a guanine base in the strand. This conformation is called a CpG (cytosine phosphate guanine). Upon methylation of the CpGs in promotor regions the transcription machinery is blocked. It can therefore not bind to its activating site which leads to downregulation or silencing of the downstream gene or genes. Methylation within a gene can be interpreted similarly. If an abundant amount of methylation is present within a gene sequence the RNA polymerase struggles to transcribe the DNA and is more likely to stop along the gene. This also leads to a downregulation of the said gene.
+
+These CpGs are normally methylated. The exception to this are CpG-rich promoters called CpG islands which are rarely methylated. These CpG islands are often found as promoters of housekeeping genes which rarely ever show any methylation. In cancer however an epigenetic change in these CpG islands for example can lead to a major driving force for cancerous development. Hypermethylation of tumoursupressorgenes or demethylation of oncogenes inevitably favour cancer growth.
+
+### Step1 - Quality control
+
+**Start and creation of matrices for later use**
+
+The columns "Strand", "symbol", "GC", "C" und "G" are not relevant for our analysis and are therefore removed.
+```{r Reading and trimming}
+ALLBcell <- readRDS("ALL-Bcell_list.RDS.gz")
+ALLpromotor <- ALLBcell[["promoters"]] 
+ALLpromotor <- ALLpromotor[,c(-4,-5,-6,-8,-9,-10)]
+```
+
+The coverage columns were isolated in a seperate dataframe which was called ALLpromotorCov. Next the means of the coverage of the genes were calculated and stored in ALLCovMeans. Finally these values were logarithmically converted to obtain a simpler plot.
+```{r Creating matrices}
+ALLpromotorCov <- ALLpromotor[,c(15:24)]
+ALLCovMeans <- rowMeans(ALLpromotorCov)
+ALLCovMeansLog <- log(ALLCovMeans)
+```
+
+
+**Plotting the histograms for means**
+
+not logarithmic
+```{r Plotting normal}
+hist(ALLCovMeans, xlab = , ylab = , xlim = c(0,10000), ylim = c(0,4000), breaks = 1000, lwd = 1)
+```
+
+logarithmic
+```{r Plotting logarithmic}
+hist(ALLCovMeansLog, xlab = , ylab = , xlim = c(0,13), ylim = c(0,250), breaks = 1000, lwd = 1)
+```
+
+
+**Finding a suited threshold**
+
+The coverage equates to the average of the reads per base on any given gene region. During sequencing base is determined by the majority of its reads. 
+
+relevante wie % bei diff thresholds 
+dann wieviel % gesamt auf basis von relevanten verworfen
+kompromiss zwischen so viel wie nötig und so wenig wie möglich -> 98,5%
+
+```{r Checking for quantiles}
+quantile(ALLCovMeans, probs = c(0.05, 0.95),na.rm = TRUE) # Gibt f?r 5% 139, f?r 95% 5957 -> 5% zu hohe Grenze 
+ALLpromotorCov1 <- ALLpromotorCov 
+```
+
+Next any values of the coverage above and below the thresholds were replaced with NA.
+```{r Replacing outliers with NA}
+ALLpromotorCov1[ALLpromotorCov > 7753] <- NA # Alle Werte ?ber 98,5% = NA
+ALLpromotorCov1[ALLpromotorCov1 < 28] <- NA  # Alle Werte unter 1,5% = NA
+```
+
+Selbst bei Grenze von 99% 3 Gene mit komplett NA (p73, APAF1, LATS1) 
+
+**Checking for presence of relevant genes and isolation**
+
+Upon literature reseach (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PARKIN, PTEN)
+```{r Isolating relevant genes}
+ALLCovGen <- ALLpromotorCov[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),]
+ALLCov1Gen <- ALLpromotorCov1[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),] 
+```
+
+**?berpr?fen wie gro? der verworfene Anteil**
+```{r Checking for rejected percentage}
+sum(!is.na(ALLpromotorCov)) # Summe aller Variablen in der Matrix die nicht NAs sind
+rejectTotal <- (1-(sum(!is.na(ALLpromotorCov1))/sum(!is.na(ALLpromotorCov)))) # Prozentsatz der verworfenen Daten insgesammt
+reject <- (1-(sum(!is.na(ALLCov1Gen))/sum(!is.na(ALLCovGen)))) # Prozentsatz der verworfenen Daten relevanter Gene
+rejectTotal
+reject
+```
+
+Grenze letztendlich bei 98,5% (7753) gesetzt, da 10% der Daten verworfen + 2 weitere Gene verworfen (p57, PTEN) -> bester Kompromiss
+
+
+**Pairing coverage and Beta-values**
+
+First a matrix containing only the Beta-values is created under the name of ALLpromotorBeta.
+```{r Creating matrix for Beta-values}
+ALLpromotorBeta <- ALLpromotor[,c(5:14)]
+```
+
+Since a NA in the coverage means there is no data backing up the Beta-value, the latter is also converted to NA. This is done in order to prevent incorporation of not significant Beta-values into downstream analysis.
+```{r Pairing coverage and Beta-value NAs}
+for(i in 1:nrow(ALLpromotorCov1)){
+     for(j in 1:ncol(ALLpromotorCov1)){
+         if(is.na(ALLpromotorCov1[i,j])){
+             ALLpromotorBeta[i,j] <- NA
+         }
+     } 
+}
+```
+
+**Eliminieren aller Gene mit >=4 NA bei disease Patienten**
+```
+for (i in 1:nrow(ALLpromotorBeta)) {
+  for(j in  1:ncol(ALLpromotorBeta)){  # Alle Gene dim(start) = 59812
+    if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
+      ALLpromotorBeta <- ALLpromotorBeta[-i,]
+    }
+  }
+}
+```
+
+```
+Future in-line code
+dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
+```
+
+
+**Eliminieren Gene mit >=4 NAs bei den healthy Patienten**
+```
+for (i in 1:nrow(ALLpromotorBeta)) {
+  for (j in 1:ncol(ALLpromotorBeta)) {       # Alle Gene dim(start) = 55111
+    if(sum(is.na(ALLpromotorBeta[i,c(6:10)]))>=4){
+      ALLpromotorBeta <- ALLpromotorBeta[-i,]
+    }
+  }
+}
+```
+
+```
+Future in-line code2
+dim(ALLpromotorBeta) # dim(end) = 54587 (1% weg)
+```
+
+Insgesamt disease(7,9%) + healthy (1%) = 8,9% (5225) aller Gene verworfen 
+
+**NAs durch Mean der Zeile ersetzen (nach gesund und krank separiert)**
+```
+for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
+  for (j in 1:5) {
+    if(is.na(ALLpromotorBeta[i,j])){
+      ALLpromotorBeta[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
+    }
+  }
+}
+for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
+  for (j in 6:10) {
+    if(is.na(ALLpromotorBeta[i,j])){
+      ALLpromotorBeta[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
+    }
+  }
+}
+sum(is.na(ALLpromotorBeta))
+```
+
+**0 durch 0,00001 und 1 durch 0,99999 ersetzen**
+```
+ALLpromotorBeta1 <- ALLpromotorBeta
+for (i in 1:nrow(ALLpromotorBeta)) {       
+  for (j in 1:ncol(ALLpromotorBeta)) {
+    if((ALLpromotorBeta[i,j])==0){
+      ALLpromotorBeta[i,j] <- 0.00001 
+    }
+    if((ALLpromotorBeta[i,j])==1){
+      ALLpromotorBeta[i,j] <- 0.99999
+    }
+  }
+}
+```
+
+```{r Preparation fo normalization, echo=FALSE}
+repeat{
+  for (i in 1:nrow(ALLpromotorBeta)) {
+    for(j in  1:ncol(ALLpromotorBeta)){  # Alle Gene dim(start) = 59812
+      if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
+        ALLpromotorBeta <- ALLpromotorBeta[-i,]
+      }
+    }
+  }
+
+  for (i in 1:nrow(ALLpromotorBeta)) {
+    for (j in 1:ncol(ALLpromotorBeta)) {       # Alle Gene dim(start) = 55111
+      if(sum(is.na(ALLpromotorBeta[i,c(6:10)]))>=4){
+        ALLpromotorBeta <- ALLpromotorBeta[-i,]
+      }
+    }
+  }
+
+  for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
+    for (j in 1:5) {
+      if(is.na(ALLpromotorBeta[i,j])){
+       ALLpromotorBeta[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
+     }
+    }
+  }
+  for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
+    for (j in 6:10) {
+     if(is.na(ALLpromotorBeta[i,j])){
+        ALLpromotorBeta[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
+      }
+   }
+  }
+  sum(is.na(ALLpromotorBeta))
+  if(sum(is.na(ALLpromotorBeta)) == 0){
+    break
+  }
+}
+```
+
+
+**Normalization**
+```{r Converting Beta- to M-values}
+ALLMvalue <- ALLpromotorBeta                 
+for (i in 1:nrow(ALLMvalue)) {
+  for (j in 1:ncol(ALLMvalue)) {
+    ALLMvalue[i,j] <- log2(ALLMvalue[i,j]/(1-ALLMvalue[i,j]))
+     }
+}
+```
+
+end of quality control
+
+### Step2 - Principal component analysis
+
