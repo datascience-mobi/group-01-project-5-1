@@ -66,7 +66,7 @@ repeat{
     # }
     # View(ALLBetaGen) # End Anzahl: 9
 
-    # Eliminieren Gene mit >=4 NAs bei den healthy Patienten
+    # Eliminieren Gene mit >=4 NAs bei den disease Patienten
     for (i in 1:nrow(ALLpromotorBeta)) {
       for (j in 1:ncol(ALLpromotorBeta)) {       
         if(sum(is.na(ALLpromotorBeta[i,c(6:10)]))>=4){
@@ -76,17 +76,17 @@ repeat{
     }
     dim(ALLpromotorBeta) 
 
-    # Insgesamt disease(7,9%) + healthy (1%) = 8,9% (5225) aller Gene verworfen 
+    # Insgesamt healthy (7,9%) + disease (1%) = 8,9% (5225) aller Gene verworfen 
 
     # NAs durch Mean der Zeile ersetzen (nach gesund und krank separiert)
-    for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
+    for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
       for (j in 1:5) {
          if(is.na(ALLpromotorBeta[i,j])){
            ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
          }
        }
     }
-    for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
+    for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
        for (j in 6:10) {
          if(is.na(ALLpromotorBeta[i,j])){
              ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
@@ -112,7 +112,7 @@ for (i in 1:nrow(ALLpromotorBeta)) {
 }
 
 # Normalisierung
-ALLMvalue <- ALLpromotorBeta                 # Nur relevante Gene
+ALLMvalue <- ALLpromotorBeta          
 for (i in 1:nrow(ALLMvalue)) {
      for (j in 1:ncol(ALLMvalue)) {
          ALLMvalue[i,j] <- log2(ALLMvalue[i,j]/(1-ALLMvalue[i,j])) 
@@ -130,7 +130,7 @@ plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei P
      
 # ggPlot
   # Bezogen auf Patienten
-samples <- c("d","d","d","d","d","h","h","h","h","h") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
+samples <- c("h","h","h","h","h","d","d","d","d","d") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
 p$x <- cbind(p$x, samples) # Einbinden in Matrix
       
 pcx12 <- data.frame(p$x[,c(1,2)]) # Matrix zu data.frame 
@@ -140,4 +140,5 @@ ggplot(pcx12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen
   # pcx12 <- data.frame(sample=rownames(p$x), X=p$x[,1], Y=p$x[,2]) 
   # ggplot(pcx12, aes(X, Y, group = sample)) + geom_point(aes(color = samples))
   
-
+# Datenreduktion anhand der ggPlots
+  # Patient 1-3 removed, da anderes Gewebe als Disease
