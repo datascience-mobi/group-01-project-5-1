@@ -129,7 +129,7 @@ pVar <- (p$sdev)^2 # Varianz berechnen
 plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei PC3 -> Nur PC1-3 aussagakräftig
      
 # ggPlot
-  # Bezogen auf Patienten
+  # Betrachtung der Patienten
 samples <- c("h","h","h","h","h","d","d","d","d","d") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
 p$x <- cbind(p$x, samples) # Einbinden in Matrix
       
@@ -142,3 +142,27 @@ ggplot(pcx12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen
   
 # Datenreduktion anhand der ggPlots
   # Patient 1-3 removed, da anderes Gewebe als Disease
+  ALLMvalue1 <- ALLMvalue[,c(-1,-2,-3)]
+  pca <- prcomp(t(ALLMvalue1))
+  pcaVar <- (pca$sdev)^2
+  plot(pcaVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Hier PC1-2 am besten
+  
+  samples1 <- c("d","d","h","h","h","h","h")
+  pca$x <- cbind(pca$x, samples1)
+  
+# Problem mit Daten: Factor nicht numeric
+  PC1 <- as.numeric(pca$x[,1])
+  PC2 <- as.numeric(pca$x[,2])
+  pcax12 <- cbind(PC1,PC2)
+  pcax12 <- data.frame(pcax12)
+  ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples)) + geom_point()
+  
+  #pcax12 <- data.frame(sample=rownames(pca$x), X=pca$x[,1], Y=pca$x[,2]) 
+  #ggplot(pca12, aes(X, Y, group = sample)) + geom_point(aes(color = samples1))
+  
+# Betrachtung der Gene
+pcar12 <- data.frame(pca$rotation[,c(1,2)])
+ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
+     
+  # Filtern der Gene mit größter Variation
+  
