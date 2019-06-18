@@ -179,3 +179,9 @@ pcaRotVar <- pcaRotVar[-c(501:54609)] # Alle Gene hinter Elbow (kleinere Varianz
 ALLMvalueRemain <- ALLMvalue1[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
       # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
 
+# Überprüfen Trennung Tumor/gesund via K-Means (Silhouette-Plot)
+Mkm <- kmeans(x = t(ALLMvalueRemain), centers = 2, nstart = 10)
+D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
+library(cluster)
+silh <- silhouette(Mkm$cluster,D) # Silhouettenplot
+plot(silh, ylab = "Patient")
