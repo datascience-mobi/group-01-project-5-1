@@ -164,5 +164,18 @@ ggplot(pcx12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen
 pcar12 <- data.frame(pca$rotation[,c(1,2)])
 ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
      
-  # Filtern der Gene mit größter Variation
+  # Filtern der Gene mit größter Varianz
+  pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
+  pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
+  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei 500)
+
+  # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
+  counts <- c(1:54609) # Vektor für Genposition
+  pcaRotVar <- cbind(pcaRotVar,counts) # Einbinden des Vektor
+  pcaRotVar <- order(pcaRotVar[,1], decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
   
+# Löschen der Gene hinter Varianz-elbow  
+pcaRotVar <- pcaRotVar[-c(501:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
+ALLMvalueRemain <- ALLMvalue1[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
+      # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
+
