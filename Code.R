@@ -8,11 +8,11 @@ ALLCovMeansLog <- log(ALLCovMeans)        # Bildung Logarithmus für Plot
 
 # Plotten + Speichern der Daten mit Histogramm
 png(filename = "E:/Studium HD/4. FS/Bioinfo05/Hist_noLOG.png", width = 1000, height = 500)
-hist(ALLCovMeans, xlab = , ylab = , xlim = c(0,10000), ylim = c(0,4000), breaks = 1000, lwd = 1) # Nicht logarithmisch
+hist(ALLCovMeans, xlab = "Means of coverage values", ylab = , xlim = c(0,10000), ylim = c(0,4000), breaks = 1000, lwd = 1) # Nicht logarithmisch
 dev.off()
 
 png(filename = "E:/Studium HD/4. FS/Bioinfo05/Hist_LOG.png", width = 1000, height = 500)
-hist(ALLCovMeansLog, xlab = , ylab = , xlim = c(0,13), ylim = c(0,250), breaks = 1000, lwd = 1)  # Logarithmisch
+hist(ALLCovMeansLog, xlab = "Logarithmic means of coverage values", ylab = , xlim = c(0,13), ylim = c(0,250), breaks = 1000, lwd = 1)  # Logarithmisch
 dev.off()
 
 # Threshold bestimmen
@@ -94,7 +94,7 @@ repeat{
        }
     }
     sum(is.na(ALLpromotorBeta))
-  if(sum(is.na(ALLpromotorBeta)) == 0{
+  if(sum(is.na(ALLpromotorBeta)) == 0){
     break
   }
 }
