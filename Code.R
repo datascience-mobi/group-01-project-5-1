@@ -130,7 +130,7 @@ plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei P
      
 # ggPlot
   # Betrachtung der Patienten
-  samples <- c("h","h","h","h","h","d","d","d","d","d") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
+   samples <- c(rep("h",5),rep("d",5)) # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
   tissue <- c(rep("tonsil",3),rep("bone marrow",7))
   provider <- c(rep("J.I.Martin-Subero",3),rep("J.Wiemels",2),rep("A.Bergmann",5))
   date <- c("Aug2013","März2015","Aug2015","Aug2013","März2015","Mai2016","Mai2016",rep("Juli2016",3))
@@ -177,6 +177,7 @@ ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
   # Löschen der Gene hinter Varianz-elbow  
   pcaRotVar <- pcaRotVar[-c(701:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
   ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
+  ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen) # Miteinbinden der relevanten Gene (sind zuvor nicht im Dataframe gewesen)
       # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
 
 # Überprüfen Trennung Tumor/gesund via K-Means (Silhouette-Plot)
@@ -185,3 +186,15 @@ D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
 library(cluster)
 silh <- silhouette(Mkm$cluster,D) # Silhouettenplot
 plot(silh, ylab = "Patient")
+
+
+# Statistical Tests
+pca_remain <- prcomp(t(ALLMvalueRemain)) 
+  # Wilcoxon Rank Test
+  pca_remain_xT <- t(pca_remain$x) # Matrix drehen damit die Patienten als Spalten dargestellt werden
+        # Alle PCs verwendet, da präzisere p-values (auch wenn höhere PCs ab PC4 nicht signifikant sind, werden keine Batch-effekte detektiert)
+  wilcox.test(pca_remain_xT[,1],pca_remain_xT[,2], paired = TRUE) # Alle Patientenkombinationen anzeigen lassen
+
+  # Kruskal Wallis Test
+  
+  
