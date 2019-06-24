@@ -122,41 +122,39 @@ View(ALLMvalue)
 
 
 ## PCA
-p <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results as an object of class prcomp.
+pca <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results as an object of class prcomp.
 
 # Plotten der Varianz um Daten zu filtern, mit welchen gearbeitet wird
-pVar <- (p$sdev)^2 # Varianz berechnen
+pVar <- (pca$sdev)^2 # Varianz berechnen
 plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei PC3 -> Nur PC1-3 aussagakräftig
      
 # ggPlot
   # Betrachtung der Patienten
-samples <- c("h","h","h","h","h","d","d","d","d","d") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
-p$x <- cbind(p$x, samples) # Einbinden in Matrix
-      
-pcx12 <- data.frame(p$x[,c(1,2)]) # Matrix zu data.frame 
-ggplot(pcx12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen ggPlot mit farbigen Punkten für PC12, PC13, PC23
+  samples <- c("h","h","h","h","h","d","d","d","d","d") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
+  tissue <- c(rep("tonsil",3),rep("bone marrow",7))
+  provider <- c(rep("J.I.Martin-Subero",3),rep("J.Wiemels",2),rep("A.Bergmann",5))
+  date <- c("Aug2013","März2015","Aug2015","Aug2013","März2015","Mai2016","Mai2016",rep("Juli2016",3))
+  
+  pcax12 <- data.frame(pca$x[,c(1,2)]) # Matrix zu data.frame 
+  ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen ggPlot mit farbigen Punkten für PC12, PC13, PC23
 
-# Alternativ aber hier keine x-/y-Achsenbeschriftung
+  # Alternativ aber hier keine x-/y-Achsenbeschriftung
   # pcx12 <- data.frame(sample=rownames(p$x), X=p$x[,1], Y=p$x[,2]) 
   # ggplot(pcx12, aes(X, Y, group = sample)) + geom_point(aes(color = samples))
   
-# Datenreduktion anhand der ggPlots
-  pca <- prcomp(t(ALLMvalue))
-  pcaVar <- (pca$sdev)^2
-  plot(pcaVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Hier PC1-2 am besten
-  
-  pca$x <- cbind(pca$x, samples)
-  
-# Problem mit Daten: Factor nicht numeric
+  # Problem mit Daten: Factor nicht numeric (manuelle Erstellung pcax12-dataframe)
   PC1 <- as.numeric(pca$x[,1])
   PC2 <- as.numeric(pca$x[,2])
   pcax12 <- cbind(PC1,PC2)
   pcax12 <- data.frame(pcax12)
   ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples)) + geom_point()
   
-  #pcax12 <- data.frame(sample=rownames(pca$x), X=pca$x[,1], Y=pca$x[,2]) 
-  #ggplot(pca12, aes(X, Y, group = sample)) + geom_point(aes(color = samples))
-  
+  # Betrachtung der Batch-Effekt: Disease/Healthy, Tissue, Provider, Date
+  batcheffect1 <- ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples, shape = provider, size = tissue)) 
+  batcheffect1 + geom_point()
+  batcheffect2 <- ggplot(pcax12, aes(x = PC1, y = PC2, colour = date, shape = provider, size = tissue))
+  batcheffect2 + geom_point()
+
 # Betrachtung der Gene
 pcar12 <- data.frame(pca$rotation[,c(1,2)])
 ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
@@ -164,16 +162,21 @@ ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
   # Filtern der Gene mit größter Varianz
   pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
   pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
-  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 700)
+  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 600)
+
+  # Filtern der Gene nach Loading
+  pcaRotAbs <- abs(pca$rotation[,1])
+  pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE)
+  plot(pcaRotAbssort, type = "l", main = "Plot der PC1 Loading", xlab = "Genes", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam)
 
   # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
   counts <- c(1:54609) # Vektor für Genposition
   pcaRotVar <- cbind(pcaRotVar,counts) # Einbinden des Vektor
   pcaRotVar <- order(pcaRotVar[,1], decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
   
-# Löschen der Gene hinter Varianz-elbow  
-pcaRotVar <- pcaRotVar[-c(701:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
-ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
+  # Löschen der Gene hinter Varianz-elbow  
+  pcaRotVar <- pcaRotVar[-c(701:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
+  ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
       # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
 
 # Überprüfen Trennung Tumor/gesund via K-Means (Silhouette-Plot)
