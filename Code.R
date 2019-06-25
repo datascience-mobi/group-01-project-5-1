@@ -130,7 +130,7 @@ plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei P
      
 # ggPlot
   # Betrachtung der Patienten
-   samples <- c(rep("h",5),rep("d",5)) # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
+  samples <- c(rep("h",5),rep("d",5)) # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
   tissue <- c(rep("tonsil",3),rep("bone marrow",7))
   provider <- c(rep("J.I.Martin-Subero",3),rep("J.Wiemels",2),rep("A.Bergmann",5))
   date <- c("Aug2013","März2015","Aug2015","Aug2013","März2015","Mai2016","Mai2016",rep("Juli2016",3))
@@ -191,10 +191,24 @@ plot(silh, ylab = "Patient")
 # Statistical Tests
 pca_remain <- prcomp(t(ALLMvalueRemain)) 
   # Wilcoxon Rank Test
-  pca_remain_xT <- t(pca_remain$x) # Matrix drehen damit die Patienten als Spalten dargestellt werden
-        # Alle PCs verwendet, da präzisere p-values (auch wenn höhere PCs ab PC4 nicht signifikant sind, werden keine Batch-effekte detektiert)
-  wilcox.test(pca_remain_xT[,1],pca_remain_xT[,2], paired = TRUE) # Alle Patientenkombinationen anzeigen lassen
+  wilcoxon_p1 <- wilcox.test(pca_remain$x[,1] ~ sample_annotation$TISSUE_TYPE) # Tissuetype von PC1-3 
+  wilcoxon_p2 <- wilcox.test(pca_remain$x[,2] ~ sample_annotation$TISSUE_TYPE)
+  wilcoxon_p3 <- wilcox.test(pca_remain$x[,3] ~ sample_annotation$TISSUE_TYPE)
+
+  wilcoxon_p4 <- wilcox.test(pca_remain$x[,1] ~ sample_annotation$DISEASE) # Disease PC1-3 
+  wilcoxon_p5 <- wilcox.test(pca_remain$x[,2] ~ sample_annotation$DISEASE)
+  wilcoxon_p6 <- wilcox.test(pca_remain$x[,3] ~ sample_annotation$DISEASE)
 
   # Kruskal Wallis Test
-  
+  sample_annotation$BIOMATERIAL_PROVIDER <- as.factor(sample_annotation$BIOMATERIAL_PROVIDER) # Sonst Error Gruppenlevel muss endlich sein
+  kruskal_p1 <- kruskal.test(pca_remain$x[,1] ~ sample_annotation$BIOMATERIAL_PROVIDER) # Provider PC1-3
+  kruskal_p2 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$BIOMATERIAL_PROVIDER)
+  kruskal_p3 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$BIOMATERIAL_PROVIDER)
+
+  sample_annotation$FIRST_SUBMISSION_DATE <- as.factor(sample_annotation$FIRST_SUBMISSION_DATE)
+  kruskal_p4 <- kruskal.test(pca_remain$x[,1] ~ sample_annotation$FIRST_SUBMISSION_DATE) # Date PC1-3 
+  kruskal_p5 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$FIRST_SUBMISSION_DATE)
+  kruskal_p6 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$FIRST_SUBMISSION_DATE)
+
+  # Permutation Test
   
