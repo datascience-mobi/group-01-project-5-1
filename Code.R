@@ -122,6 +122,7 @@ View(ALLMvalue)
 
 
 ## PCA
+library(ggplot2)
 pca <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results as an object of class prcomp.
 
 # Plotten der Varianz um Daten zu filtern, mit welchen gearbeitet wird
@@ -162,11 +163,11 @@ ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
   # Filtern der Gene mit größter Varianz
   pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
   pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
-  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 600)
+  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 700)
 
   # Filtern der Gene nach Loading
-  pcaRotAbs <- abs(pca$rotation[,1])
-  pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE)
+  pcaRotAbs <- abs(pca$rotation[,1]) # Betrag der Loadings berechnen
+  pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE) # Loadings absteigend sortieren
   plot(pcaRotAbssort, type = "l", main = "Plot der PC1 Loading", xlab = "Genes", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam)
 
   # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
@@ -179,13 +180,6 @@ ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
   ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
   ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen) # Miteinbinden der relevanten Gene (sind zuvor nicht im Dataframe gewesen)
       # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
-
-# Überprüfen Trennung Tumor/gesund via K-Means (Silhouette-Plot)
-Mkm <- kmeans(x = t(ALLMvalueRemain), centers = 2, nstart = 10)
-D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
-library(cluster)
-silh <- silhouette(Mkm$cluster,D) # Silhouettenplot
-plot(silh, ylab = "Patient")
 
 
 # Statistical Tests
@@ -210,5 +204,51 @@ pca_remain <- prcomp(t(ALLMvalueRemain))
   kruskal_p5 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$FIRST_SUBMISSION_DATE)
   kruskal_p6 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$FIRST_SUBMISSION_DATE)
 
-  # Permutation Test
+
+# Visualisation
+  # Heatmap
+  Tissue_Type <- c(0.03,0.017,0.83)
+  Disease <- c(0.008,0.69,1)
+  Provider <- c(0.097,0.097,0.458)
+  Submission_Date <- c(0.086,0.617,0.726)
+  P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date) # Erstellen matrix mit p-values
+  heatmap(P_values, main = "Heatmap P-values", Colv = NA, Rowv = NA, col = cm.colors(256)) # Heatmap der p-values
+  # Levelplot
+  library(lattice)
+  levelplot(t(P_values), xlab = "PCs", ylab = "Batches", main = "Levelplot P-values") # Levelplot der p-values
+  levelplot(t(ALLMvalueRemain[,c(1:3)]), xlab = "PCs", ylab = "Patients", main = "Levelplot PCA") # Levelplot der PCA$x-Werte
+  pca_remain_x_abs <- abs(pca_remain$x[,c(1:3)])
+  levelplot(t(pca_remain_x_abs), xlab = "PCs", ylab = "Patients", main = "Plot PCA Betrag") # Levelplot des Betrags der PCA$x-Werte
   
+# Loading plotten 
+pca_rot_PC1 <- pca_remain$rotation[,1] # Verwenden der PC1
+pca_rot_PC1_Abs <- abs(pca_rot_PC1) # Loading Betrag berechnen
+pca_rot_PC1_sort <- sort(pca_rot_PC1_Abs, decreasing = TRUE) # Loading sortieren
+plot(pca_rot_PC1_sort, type = "l",main = "Loading plot PC1", ylab = "Loading", xlab = "Genes")
+
+# K-Means (Silhouette-Plot)
+M_km <- kmeans(x = ALLMvalueRemain, centers = 2, nstart = 10)
+M_km
+D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
+library(cluster)
+silh <- silhouette(Mkm$cluster,D) # Silhouettenplot der Patienten
+plot(silh, ylab = "Patient") # 2 Cluster erkennbar
+
+
+# T-test
+  Mvalues_noTO <- ALLMvalueRemain[,c(4:10)] # Tonsil-Patienten herausgenommen
+  Mvalues_healthy <- Mvalues_noTO[,c(1,2)] # Matrix splitten in healthy und disease
+  Mvalues_disease <- Mvalues_noTO[,c(3:7)]
+
+t_test_pvalues <- c(1:709) # Erstellung Liste für p-values
+
+for (i in 1:length(t_test)) {
+    t_test[i] <- t.test(Mvalues_healthy[i,],Mvalues_disease[i,])$p.value
+}
+  # Adjust p-value multiple comparison
+  p_correction <- p.adjust(t_test, method = "holm", n = length(t_test))
+  p_correction <- order(p_correction) # Korrigierte p-values absteigend ordnen -> Position wird ausgegeben
+  t_test <- order(t_test) # Absteigend ordnen -> Position wird angegeben (Gleiche Anordnung wie bei p_correction)
+
+t_test <- t_test[c(1:20)] # Erste 20 Werte behalten
+ALLMvalueRemain20 <- ALLMvalueRemain[t_test,] 
