@@ -227,11 +227,11 @@ pca_rot_PC1_sort <- sort(pca_rot_PC1_Abs, decreasing = TRUE) # Loading sortieren
 plot(pca_rot_PC1_sort, type = "l",main = "Loading plot PC1", ylab = "Loading", xlab = "Genes")
 
 # K-Means (Silhouette-Plot)
-M_km <- kmeans(x = ALLMvalueRemain, centers = 2, nstart = 10)
+M_km <- kmeans(t(x = ALLMvalueRemain), centers = 2, nstart = 10)
 M_km
 D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
 library(cluster)
-silh <- silhouette(Mkm$cluster,D) # Silhouettenplot der Patienten
+silh <- silhouette(M_km$cluster,D) # Silhouettenplot der Patienten
 plot(silh, ylab = "Patient") # 2 Cluster erkennbar
 
 
