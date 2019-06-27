@@ -82,14 +82,14 @@ repeat{
     for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
       for (j in 1:5) {
          if(is.na(ALLpromotorBeta[i,j])){
-           ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
+           ALLpromotorBeta[i,j] <- rowMeans(ALLpromotorBeta[i,c(1:5)], na.rm = TRUE) 
          }
        }
     }
     for (i in 1:nrow(ALLpromotorBeta)) {       # Kranke Daten
        for (j in 6:10) {
          if(is.na(ALLpromotorBeta[i,j])){
-             ALLpromotorBeta1[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
+             ALLpromotorBeta[i,j] <- rowMeans(ALLpromotorBeta[i,c(6:10)], na.rm = TRUE) 
          }
        }
     }
@@ -251,4 +251,5 @@ for (i in 1:length(t_test)) {
   t_test <- order(t_test) # Absteigend ordnen -> Position wird angegeben (Gleiche Anordnung wie bei p_correction)
 
 t_test <- t_test[c(1:20)] # Erste 20 Werte behalten
-ALLMvalueRemain20 <- ALLMvalueRemain[t_test,] 
+ALLMvalueRemain20 <- ALLMvalueRemain[t_test,] # Dataframe mit verbliebenene M-values
+ALLBetaRemain20 <- ALLpromotorBeta[t_test,]   # Dataframe mit verbliebenen Beta-values
