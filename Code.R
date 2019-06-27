@@ -253,3 +253,15 @@ for (i in 1:length(t_test)) {
 t_test <- t_test[c(1:20)] # Erste 20 Werte behalten
 ALLMvalueRemain20 <- ALLMvalueRemain[t_test,] # Dataframe mit verbliebenene M-values
 ALLBetaRemain20 <- ALLpromotorBeta[t_test,]   # Dataframe mit verbliebenen Beta-values
+
+# Visualisierung
+ALLBetaRemain20 <- as.matrix(ALLBetaRemain20)
+levelplot(ALLBetaRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes")
+
+for (i in 1:20) {
+    for(j in 1:10){
+        ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur für den Fall, dass Variablen nicht numerisch
+    }
+}
+ALLMvalueRemain20 <- as.matrix(ALLMvalueRemain20)
+levelplot(ALLMvalueRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes")
