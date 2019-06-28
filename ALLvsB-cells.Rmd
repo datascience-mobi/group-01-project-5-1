@@ -242,7 +242,8 @@ for (i in 1:nrow(ALLpromotorBeta)) {
 **Normalization**
 
 In our last step of quality control our Beta-values were converted to M-values.
-David M-values why?
+According to Pan Du et. al. M-values provide a much better performance for Detectoion Rate and True Positive Rate at highly methylated and highly umethylated CpG sites. The Beta-values have a higher statistical spread (heteroscedasticity) outside the middle methylation range. So the M-Values provide an more accurate estimation of the metyhlation status. The M-Values have no direct biological interpretation, whereas the Beta-Values relate roughly to the methylation percentage. For this reason we also looked at the Beta-Values in later on analysis.
+
 ```{r Converting Beta- to M-values}
 ALLMvalue <- ALLpromotorBeta                 
 for (i in 1:nrow(ALLMvalue)) {
