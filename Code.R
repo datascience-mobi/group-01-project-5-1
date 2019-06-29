@@ -240,7 +240,7 @@ plot(silh, ylab = "Patient") # 2 Cluster erkennbar
   Mvalues_healthy <- Mvalues_noTO[,c(1,2)] # Matrix splitten in healthy und disease
   Mvalues_disease <- Mvalues_noTO[,c(3:7)]
 
-t_test_pvalues <- c(1:709) # Erstellung Liste für p-values
+t_test <- c(1:709) # Erstellung Liste für p-values
 
 for (i in 1:length(t_test)) {
     t_test[i] <- t.test(Mvalues_healthy[i,],Mvalues_disease[i,])$p.value
@@ -248,20 +248,32 @@ for (i in 1:length(t_test)) {
   # Adjust p-value multiple comparison
   p_correction <- p.adjust(t_test, method = "holm", n = length(t_test))
   p_correction <- order(p_correction) # Korrigierte p-values absteigend ordnen -> Position wird ausgegeben
-  t_test <- order(t_test) # Absteigend ordnen -> Position wird angegeben (Gleiche Anordnung wie bei p_correction)
+  t_test_order <- order(t_test) # Aufsteigend ordnen -> Position wird angegeben (Gleiche Anordnung wie bei p_correction)
+  t_test_sort <- sort(t_test) # Aufsteigend ordnen -> Wert wird angegeben
 
-t_test <- t_test[c(1:20)] # Erste 20 Werte behalten
-ALLMvalueRemain20 <- ALLMvalueRemain[t_test,] # Dataframe mit verbliebenene M-values
-ALLBetaRemain20 <- ALLpromotorBeta[t_test,]   # Dataframe mit verbliebenen Beta-values
+t_test20 <- t_test_order[c(1:20)] # Erste 20 Werte behalten
+ALLMvalueRemain20 <- ALLMvalueRemain[t_test20,] # Dataframe mit verbliebenene M-values (20)
+ALLBetaRemain20 <- ALLpromotorBeta[t_test20,]   # Dataframe mit verbliebenen Beta-values (20)
+
+threshold <- sum(t_test_sort <= 0.05) # Threshold auf p = 0.05 gesetzt
+t_test_threshold <- t_test_order[c(1:threshold)]
+ALLMvalueRemain_threshold <- ALLMvalueRemain[t_test_threshold,] # Dataframe mit verbliebenene M-values (99)
+ALLBetaRemain_threshold <- ALLpromotorBeta[t_test_threshold,]   # Dataframe mit verbliebenen Beta-values (99)
 
 # Visualisierung
-ALLBetaRemain20 <- as.matrix(ALLBetaRemain20)
-levelplot(ALLBetaRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes")
+library(lattice)
+ALLBetaRemain20 <- as.matrix(ALLBetaRemain20) 
+levelplot(ALLBetaRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot 20 verbliebenen beta-values
 
 for (i in 1:20) {
     for(j in 1:10){
         ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur für den Fall, dass Variablen nicht numerisch
     }
 }
-ALLMvalueRemain20 <- as.matrix(ALLMvalueRemain20)
-levelplot(ALLMvalueRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes")
+ALLMvalueRemain20 <- as.matrix(ALLMvalueRemain20) 
+levelplot(ALLMvalueRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot 20 verbliebenen M-values
+
+levelplot(ALLBetaRemain_threshold, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot verbliebener beta-values hinter 0.05 threshold
+
+ALLMvalueRemain_threshold <- as.matrix(ALLMvalueRemain_threshold) 
+levelplot(ALLMvalueRemain_threshold, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
