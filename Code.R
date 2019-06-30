@@ -260,20 +260,36 @@ t_test_threshold <- t_test_order[c(1:threshold)]
 ALLMvalueRemain_threshold <- ALLMvalueRemain[t_test_threshold,] # Dataframe mit verbliebenene M-values (99)
 ALLBetaRemain_threshold <- ALLpromotorBeta[t_test_threshold,]   # Dataframe mit verbliebenen Beta-values (99)
 
-# Visualisierung
+# Visualisierung (Levelplot)
 library(lattice)
-ALLBetaRemain20 <- as.matrix(ALLBetaRemain20) 
-levelplot(ALLBetaRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot 20 verbliebenen beta-values
+  # Beta-value 20 verbliebene Genes
+  ALLBetaRemain20_plot <- as.matrix(ALLBetaRemain20) # Konvertierung zur Matrix
+  rownames(ALLBetaRemain20_plot) <- c(1:nrow(ALLBetaRemain20)) # Anpassen der Zeilennamen
+  levelplot(ALLBetaRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of 20 remaining Genes") 
+  # M-value 20 verbliebene Genes
+  for (i in 1:20) {
+      for(j in 1:10){
+          ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur für den Fall, dass Variablen nicht numerisch
+      }
+  }
+  ALLMvalueRemain20_plot <- as.matrix(ALLMvalueRemain20) 
+  rownames(ALLMvalueRemain20_plot) <- c(1:nrow(ALLMvalueRemain20))
+  levelplot(ALLMvalueRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of 20 remaining Genes") # Levelplot 20 verbliebenen M-values
+  # Beta-values threshold p=0.05
+  ALLBetaRemain_threshold_plot <- as.matrix(ALLBetaRemain_threshold)
+  rownames(ALLBetaRemain_threshold_plot) <- c(1:nrow(ALLBetaRemain_threshold))
+  levelplot(ALLBetaRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot verbliebener beta-values hinter 0.05 threshold
+  # M-values threshold p=0.05
+  ALLMvalueRemain_threshold_plot <- as.matrix(ALLMvalueRemain_threshold)
+  rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
+  levelplot(ALLMvalueRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
 
-for (i in 1:20) {
-    for(j in 1:10){
-        ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur für den Fall, dass Variablen nicht numerisch
-    }
-}
-ALLMvalueRemain20 <- as.matrix(ALLMvalueRemain20) 
-levelplot(ALLMvalueRemain20, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot 20 verbliebenen M-values
 
-levelplot(ALLBetaRemain_threshold, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot verbliebener beta-values hinter 0.05 threshold
+# Logistical regression (threshold bei 99 Genes)
+Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren damit Patienten auf y-Achse
+Tumor <- factor(c(rep("0",5),rep("1",5)))
+Lg_Mvalues <- cbind(Lg_Mvalues,Tumor) # Einbinden einer Spalte mit Bezeichnung ob Tumor ja/nein
 
-ALLMvalueRemain_threshold <- as.matrix(ALLMvalueRemain_threshold) 
-levelplot(ALLMvalueRemain_threshold, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
+glm99 <- glm(Tumor ~ Lg_Mvalues[,1], family = "binomial", data = Lg_Mvalues) 
+predict(glm99, type = "response") # Anwendung zur Vorhersage
+
