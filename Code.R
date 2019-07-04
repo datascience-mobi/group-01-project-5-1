@@ -290,6 +290,16 @@ Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren da
 Tumor <- factor(c(rep("0",5),rep("1",5)))
 Lg_Mvalues <- cbind(Lg_Mvalues,Tumor) # Einbinden einer Spalte mit Bezeichnung ob Tumor ja/nein
 
-glm99 <- glm(Tumor ~ Lg_Mvalues[,1], family = "binomial", data = Lg_Mvalues) 
-predict(glm99, type = "response") # Anwendung zur Vorhersage
+LGpred <- as.matrix(c(1:10))  # Erstellung matrix für Ergebnisse
+for (i in 1:nrow(ALLMvalueRemain_threshold)) {
+     glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data
+     = Lg_Mvalues) # Logistical regression einzelner Gene
+     pred <- as.matrix(predict(glm99, type = "response")) # Anwendung zur Vorhersage
+     LGpred <- cbind(LGpred,pred) # Matrix mit allen Ergebnissen der prediction
+}
+View(LGpred)
+LGpred <- LGpred[,-1]
+
+levelplot(t(LGpred), xlab = "Genes", ylab = "Patients", main = "Levelplot of logistical regression prediction") # Visualisierung
+
 
