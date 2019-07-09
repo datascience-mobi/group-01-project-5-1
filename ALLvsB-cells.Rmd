@@ -11,17 +11,23 @@ output:
 
 **DNA methylation**
 
-One of the cells regulatory mechanisms for switching genes on and off is methylation of cytosines in promotor or coding regions. The enzymes responsible for this methylation only recognize cytosines which are followed by a guanine base in the strand. This conformation is called a CpG (cytosine phosphate guanine). Upon methylation of the CpGs in promotor regions the transcription machinery is blocked. It can therefore not bind to its activating site which leads to downregulation or silencing of the downstream gene or genes. Methylation within a gene can be interpreted similarly. If an abundant amount of methylation is present within a gene sequence the RNA polymerase struggles to transcribe the DNA and is more likely to stop along the gene. This also leads to a downregulation of the said gene.
+One of the cells regulatory mechanisms for switching genes on and off is methylation of cytosines in promotor or coding regions. The enzymes responsible for this methylation only recognize cytosines which are followed by a guanosine nucleotide in the strand. This conformation is called a CpG (cytosine phosphate guanosine). Upon methylation of the CpGs in promotor regions the transcription machinery is blocked. It can therefore not bind to its activating site which leads to downregulation or silencing of the downstream gene or genes. Methylation within a gene can be interpreted similarly. If an abundant amount of methylation is present within a gene sequence the RNA polymerase struggles to transcribe the DNA and is more likely to stop along the gene. This also leads to a downregulation of the said gene.
 
-These CpGs are normally methylated. The exception to this are CpG-rich promoters called CpG islands which are rarely methylated. These CpG islands are often found as promoters of housekeeping genes which rarely ever show any methylation. In cancer however an epigenetic change in these CpG islands for example can lead to a major driving force for cancerous development. Hypermethylation of tumoursupressorgenes or demethylation of oncogenes inevitably favour cancer growth.
+These CpGs are normally methylated. The exception to this are CpG-rich promoters called CpG islands which are rarely methylated. These CpG islands are often found as promoters of housekeeping genes which rarely ever show any methylation. In cancer however an epigenetic change in these CpG islands for example can lead to a major driving force for cancerous development. Hypermethylation of tumoursupressorgenes or hypomethylation of oncogenes inevitably favour cancer growth.
 
 **Tumour type**
 
+The type of cancer we are focussing on is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75% of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60% of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). Combining this knowledge with methylation status our project is comparing genome-wide methylation data of diseased and healthy patients. The samples were either taken from the bone marrow (healthy and diseased) or the tonsils (healthy) of 0-18 year old patients.
+
 **Biological question - goal**
+
+wip
 
 ### Step1 - Quality control
 
-**Start and creation of matrices for later use**
+Before starting our analysis the dataset first has to undergo different stages of data cleaning and quality control. In order to do that we need to remove any non significant or ambiguous rows and remove or replace all NAs. As a last step our Beta-values are converted into M-values for a statistically more accurate representation of the methylation levels.
+
+**Trimming the dataset and creation of matrices for later use**
 
 The columns "Strand", "symbol", "GC", "C" und "G" are not relevant for our analysis and are therefore removed.
 ```{r Reading and trimming}
@@ -30,7 +36,7 @@ ALLpromotor <- ALLBcell[["promoters"]]
 ALLpromotor <- ALLpromotor[,c(-4,-5,-6,-8,-9,-10)]
 ```
 
-The coverage columns were isolated in a seperate dataframe which was called ALLpromotorCov. Next the means of the coverage of the genes were calculated and stored in ALLCovMeans. Finally these values were logarithmically converted to obtain a simpler plot.
+The coverage columns were isolated in a seperate dataframe which was called ALLpromotorCov. Next the means of the coverage of the promoters were calculated and stored in ALLCovMeans. Finally these values were logarithmically converted to obtain a simpler plot.
 ```{r Creating matrices}
 ALLpromotorCov <- ALLpromotor[,c(15:24)]
 ALLCovMeans <- rowMeans(ALLpromotorCov)
@@ -55,10 +61,10 @@ hist(ALLCovMeansLog, xlab = "Logarithmic means of coverage values", ylab = , xli
 
 The coverage equates to the average of the reads per base on any given gene region. During sequencing each base is determined by the majority of its reads. If there are very few (e.g. <25) reads for a single base or region it is prone to error due to statistical insecurity. The lower the amount of reads the higher are the chances that a few "wrong" reads alter the result of the read out base.
 If there are very many (e.g. >10000) reads per base the result could be altered due to an amplification error during the PCR. This error would then be amplified as well if it appears early duing the amplification process. 
-Therefore it is important to find a suited threshold for the coverages in order to assure the significance of the Beta-values which are directly depentent of the sequencing accuracy.
-Upon literature reseach we defined 14 promoters for genes (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PARKIN, PTEN, p73, APAF1, LATS1) as "relevant" for our tumour type. In order to find an upper threshold we took several factors into account. First we checked how many of the "relevant" pomoters were removed for different thresholds. Even with a threshold of 99% of our coverage 3 promoters for genes (p73, APAF1, LATS1) always only had NA for the coverage values. 
-Next we checked how many "non-relevant" regions were removed while still keeping as many "relevant" prooters additionally reducing the coverage as much as needed to avoid PCR mediated errors.
-Finally we agreed on a lower threshold of 1.5 % (28) and an upper threshold of 98.5 % (7753) since only 10 % of "non-relevant" data and 2 additional "relevant" promoter regions (p57, PTEN) were rejected. It formed the best compromise between the aforementioned factors.
+Therefore it is important to find a suited threshold for the coverages in order to assure the significance of the Beta-values which are directly depending on the sequencing accuracy.
+Upon literature reseach we defined 14 promoters for genes (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PARKIN, PTEN, p73, APAF1, LATS1) as "relevant" for our tumour type (Roman-Gomez *et al.*, 2004). In order to find an upper threshold we took several factors into account. First we checked how many of the "relevant" promoters were removed for different thresholds. Even with a threshold of 99% of our coverage 3 promoters for genes (p73, APAF1, LATS1) always only had NA for the coverage values (any value outside of thresholds = NA). 
+Next we checked how many "non-relevant" regions were removed while still keeping as many "relevant" promoters additionally reducing the coverage as much as needed to avoid PCR mediated errors.
+Finally we agreed on a lower threshold of 1.5 % (28) and an upper threshold of 98.5 % (7753) of the coverage values since only 10 % of "non-relevant" data and 2 additional "relevant" promoter regions (p57, PTEN) were rejected. It formed the best compromise between the aforementioned factors.
 ```{r Checking for quantiles}
 quantile(ALLCovMeans, probs = c(0.05, 0.95),na.rm = TRUE)
 quantile(ALLCovMeans, probs = c(0.015, 0.985),na.rm = TRUE)
@@ -83,7 +89,7 @@ ALLCov1Gen <- ALLpromotorCov1[c("ENSG00000039068","ENSG00000078900","ENSG0000014
 
 **Checking for percentage of rejected coverage values**
 
-Finally upon each tested threshold the amout of rejected values was calculated by subtracting the quotient of the sum of non NA values before and after threshold cleanup from 1. This calculation was always done for both "non-relevant" and "relevant" promoter regions.
+Finally upon each tested threshold the amout of rejected values was calculated by subtracting the percentage of non NA values after threshold cleanup from 1. This calculation was always done for both "non-relevant" and "relevant" promoter regions.
 ```{r Checking for rejected percentage}
 sum(!is.na(ALLpromotorCov))
 rejectTotal <- (1-(sum(!is.na(ALLpromotorCov1))/sum(!is.na(ALLpromotorCov)))) 
@@ -95,7 +101,7 @@ reject
 
 **Pairing coverage and Beta-values**
 
-First a matrix containing only the Beta-values is created under the name of ALLpromotorBeta.
+First a matrix containing only Beta-values is created under the name of ALLpromotorBeta.
 ```{r Creating matrix for Beta-values}
 ALLpromotorBeta <- ALLpromotor[,c(5:14)]
 ```
@@ -112,7 +118,7 @@ for(i in 1:nrow(ALLpromotorCov1)){
 ```
 
 
-**Elimination of all regions in both patient groups with more than 3 NA in Beta-value**
+**Elimination of all regions with more than 3 NA in Beta-value in both patient groups**
 
 Any gene region with more than 3 NA for any patient group in the Beta-value coloumns is removed due to its low amount of information it can provide for testing of differentially methylated regions. Therefore if there is only one patient or none with a Beta-value for a specific gene region the latter is removed since the input data is not significant enough to be used in the downstream analysis.
 ```
@@ -141,7 +147,7 @@ After elimination through diseased patients another 1 % of promoter regions were
 
 **Replacing residual NAs by the mean of the patient group**
 
-Any remaining NAs are now replaced by the patient group's mean value in order to completely remove NAs from our dataset.
+Any remaining NAs are now replaced by the patient group's mean Beta-value in order to completely remove NAs in the Beta-values from our dataset.
 ```
 for (i in 1:nrow(ALLpromotorBeta)) {       #replacement for healthy group
   for (j in 1:5) {
@@ -223,8 +229,8 @@ repeat{
 
 **Preparation for normalization**
 
-In order to prevent mathematical errors during normalization for the values 0 and 1 they are replaced by 0.00001 and 0.99999 respectivey.
-```{r}
+In order to prevent mathematical errors during normalization for the values 0 and 1 they are replaced by 0.00001 and 0.99999 respectively. If this step is not done the resulting M-values would equate to positive and negative infinity.
+```{r Preparing normalization}
 ALLpromotorBeta1 <- ALLpromotorBeta
 for (i in 1:nrow(ALLpromotorBeta)) {       
   for (j in 1:ncol(ALLpromotorBeta)) {
@@ -242,7 +248,7 @@ for (i in 1:nrow(ALLpromotorBeta)) {
 **Normalization**
 
 In our last step of quality control our Beta-values were converted to M-values.
-According to Pan Du et. al. M-values provide a much better performance for Detectoion Rate and True Positive Rate at highly methylated and highly umethylated CpG sites. The Beta-values have a higher statistical spread (heteroscedasticity) outside the middle methylation range. So the M-Values provide an more accurate estimation of the metyhlation status. The M-Values have no direct biological interpretation, whereas the Beta-Values relate roughly to the methylation percentage. For this reason we also looked at the Beta-Values in later on analysis.
+M-values provide a much better performance for detection rate and true positive rate at highly methylated and highly umethylated CpG sites. The Beta-values have a higher statistical spread (heteroscedasticity) outside the middle methylation range. So the M-Values provide a more accurate estimation of the methylation status (Pan Du *et al.*, 2010). The M-values have no direct biological interpretation, whereas the Beta-values relate roughly to the methylation percentage. For this reason we also looked at the Beta-Values in later on analysis.
 
 ```{r Converting Beta- to M-values}
 ALLMvalue <- ALLpromotorBeta                 
@@ -257,69 +263,220 @@ for (i in 1:nrow(ALLMvalue)) {
 
 ### Step2 - Principal component analysis
 
-following is still unprocessed (mere copy of Code.R)
-```{r}
-p <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results as an object of class prcomp.
+Before testing single promoters for differential methylation we need to reduce the amount of data through principal component analysis (PCA). The dataset it therefore represented through a number of principal components (PC) with the first PC representing the highest variance of the data. Each PC is influenced by any promoter in the dataset. If the associated value is high the promoter is important for the principal component. If the value is low this particular promoter is not very important for the PC. 
+Upon plotting the variance of each PC the relevant PCs can be filtered by cutting off at a noticeable elbow in the plot (as seen later). An elbow in the plot represents a cutoff point after which the following PCs/promoters don't add much information to the analyis. Therefore any following components/promoters can be removed without losing significant amounts of information about the data.
+Next the selected PCs are plotted against each other in order to check for the best PC to pick for downstream analysis. Usually this is the first PC (PC1). As a last step the variance of each promoter is sorted and plotted for the selected PC. Here an elbow is visible again which marks the significant promoters on its left side (high variance) and the not significant ones to its right (low variance). Finally the significant genes are isolated and proceed to the next major step.
 
-# Plotten der Varianz um Daten zu filtern, mit welchen gearbeitet wird
-pVar <- (p$sdev)^2 # Varianz berechnen
-plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei PC3 -> Nur PC1-3 aussagakräftig
-     
+
+**Performing PCA and selection of relevant PCs**
+
+First the actual PCA is executed.
+```{r Performing PCA}
+library(ggplot2)
+pca <- prcomp(t(ALLMvalue))
+```
+
+
+Next the variance of the PCs are plotted to determine the elbow and therefore the relevant PCs. 
+```{r Plotting variance of PCS}
+pVar <- (pca$sdev)^2
+plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs")
+```
+
+In our case the cutoff was at PC3 so we kept the first three principal components for the following steps.
+
+
+**Plotting the PCs against each other**
+
+In order to ensure the significance of the differential methylation we nedded to check for batch effects. We did this visually through plotting and statistically through several tests. Our samples did not show any significant batcheffect except for the tissue type since the control group contained tonsil and bone marrow samples. For this reason most analyses were performed without the tonsil samples. 
+
+
+```{r Adding batch effect columns}
 # ggPlot
   # Betrachtung der Patienten
-samples <- c("h","h","h","h","h","d","d","d","d","d") # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
-p$x <- cbind(p$x, samples) # Einbinden in Matrix
-      
-pcx12 <- data.frame(p$x[,c(1,2)]) # Matrix zu data.frame 
-ggplot(pcx12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen ggPlot mit farbigen Punkten für PC12, PC13, PC23
+  samples <- c(rep("h",5),rep("d",5)) # Erstellen einer weiteren Spalte im Datensatz fÃ¼r Farbigkeit
+  tissue <- c(rep("tonsil",3),rep("bone marrow",7))
+  provider <- c(rep("J.I.Martin-Subero",3),rep("J.Wiemels",2),rep("A.Bergmann",5))
+  date <- c("Aug2013","Mar2015","Aug2015","Aug2013","Mar2015","May2016","May2016",rep("Jul2016",3))
+```
 
-# Alternativ aber hier keine x-/y-Achsenbeschriftung
+```{r}
+  pcax12 <- data.frame(pca$x[,c(1,2)]) # Matrix zu data.frame damit er damit arbeiten kann (ggplot)
+  ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples)) + geom_point() # Erzeugen ggPlot mit farbigen Punkten fÃ¼r PC12, PC13, PC23
+
+  # Alternativ aber hier keine x-/y-Achsenbeschriftung
   # pcx12 <- data.frame(sample=rownames(p$x), X=p$x[,1], Y=p$x[,2]) 
   # ggplot(pcx12, aes(X, Y, group = sample)) + geom_point(aes(color = samples))
   
-# Datenreduktion anhand der ggPlots
-  # Patient 1-3 removed, da anderes Gewebe als Disease
-  ALLMvalue1 <- ALLMvalue[,c(-1,-2,-3)]
-  pca <- prcomp(t(ALLMvalue1))
-  pcaVar <- (pca$sdev)^2
-  plot(pcaVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Hier PC1-2 am besten
-  
-  samples1 <- c("d","d","h","h","h","h","h")
-  pca$x <- cbind(pca$x, samples1)
-  
-# Problem mit Daten: Factor nicht numeric
+  # Problem mit Daten: Factor nicht numeric (manuelle Erstellung pcax12-dataframe)
   PC1 <- as.numeric(pca$x[,1])
   PC2 <- as.numeric(pca$x[,2])
   pcax12 <- cbind(PC1,PC2)
   pcax12 <- data.frame(pcax12)
   ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples)) + geom_point()
   
-  #pcax12 <- data.frame(sample=rownames(pca$x), X=pca$x[,1], Y=pca$x[,2]) 
-  #ggplot(pca12, aes(X, Y, group = sample)) + geom_point(aes(color = samples1))
-  
+  # Betrachtung der Batch-Effekt: Disease/Healthy, Tissue, Provider, Date
+  batcheffect1 <- ggplot(pcax12, aes(x = PC1, y = PC2, colour = samples, shape = provider, size = tissue)) 
+  batcheffect1 + geom_point()
+  batcheffect2 <- ggplot(pcax12, aes(x = PC1, y = PC2, colour = date, shape = provider, size = tissue))
+  batcheffect2 + geom_point()
+
 # Betrachtung der Gene
 pcar12 <- data.frame(pca$rotation[,c(1,2)])
 ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
      
-  # Filtern der Gene mit größter Varianz
+  # Filtern der Gene mit grÃ¶Ãter Varianz
   pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
   pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
-  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei 500)
+  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 700)
 
-  # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
-  counts <- c(1:54609) # Vektor für Genposition
-  pcaRotVar <- cbind(pcaRotVar,counts) # Einbinden des Vektor
+  # Filtern der Gene nach Loading
+  pcaRotAbs <- abs(pca$rotation[,1]) # Betrag der Loadings berechnen
+  pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE) # Loadings absteigend sortieren
+  plot(pcaRotAbssort, type = "l", main = "Plot der PC1 Loading", xlab = "Genes", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam) 
+
+  # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten Ã¼bertragen werden kann)
   pcaRotVar <- order(pcaRotVar[,1], decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
   
-# Löschen der Gene hinter Varianz-elbow  
-pcaRotVar <- pcaRotVar[-c(501:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
-ALLMvalueRemain <- ALLMvalue1[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
-      # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
+  # LÃ¶schen der Gene hinter Varianz-elbow  
+  pcaRotVar <- pcaRotVar[-c(701:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
+  ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
+  ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen) # Miteinbinden der relevanten Gene (sind zuvor nicht im Dataframe gewesen)
+      # ALLMvalueRemain: EnthÃ¤lt alle Gene/Patienten nach PCA
+```
 
-# Überprüfen Trennung Tumor/gesund via K-Means (Silhouette-Plot)
-Mkm <- kmeans(x = t(ALLMvalueRemain), centers = 2, nstart = 10)
+**Batcheffects**
+```{r}
+# Statistical Tests
+pca_remain <- prcomp(t(ALLMvalueRemain)) 
+  # Wilcoxon Rank Test
+  wilcoxon_p1 <- wilcox.test(pca_remain$x[,1] ~ sample_annotation$TISSUE_TYPE) # Tissuetype von PC1-3 
+  wilcoxon_p2 <- wilcox.test(pca_remain$x[,2] ~ sample_annotation$TISSUE_TYPE)
+  wilcoxon_p3 <- wilcox.test(pca_remain$x[,3] ~ sample_annotation$TISSUE_TYPE)
+
+  wilcoxon_p4 <- wilcox.test(pca_remain$x[,1] ~ sample_annotation$DISEASE) # Disease PC1-3 
+  wilcoxon_p5 <- wilcox.test(pca_remain$x[,2] ~ sample_annotation$DISEASE)
+  wilcoxon_p6 <- wilcox.test(pca_remain$x[,3] ~ sample_annotation$DISEASE)
+
+  # Kruskal Wallis Test
+  sample_annotation$BIOMATERIAL_PROVIDER <- as.factor(sample_annotation$BIOMATERIAL_PROVIDER) # Sonst Error Gruppenlevel muss endlich sein
+  kruskal_p1 <- kruskal.test(pca_remain$x[,1] ~ sample_annotation$BIOMATERIAL_PROVIDER) # Provider PC1-3
+  kruskal_p2 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$BIOMATERIAL_PROVIDER)
+  kruskal_p3 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$BIOMATERIAL_PROVIDER)
+
+  sample_annotation$FIRST_SUBMISSION_DATE <- as.factor(sample_annotation$FIRST_SUBMISSION_DATE)
+  kruskal_p4 <- kruskal.test(pca_remain$x[,1] ~ sample_annotation$FIRST_SUBMISSION_DATE) # Date PC1-3 
+  kruskal_p5 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$FIRST_SUBMISSION_DATE)
+  kruskal_p6 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$FIRST_SUBMISSION_DATE)
+
+
+# Visualisation
+  # Heatmap
+  Tissue_Type <- c(0.03,0.017,0.83)
+  Disease <- c(0.008,0.69,1)
+  Provider <- c(0.097,0.097,0.458)
+  Submission_Date <- c(0.086,0.617,0.726)
+  P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date) # Erstellen matrix mit p-values
+  heatmap(P_values, main = "Heatmap P-values", Colv = NA, Rowv = NA, col = cm.colors(256)) # Heatmap der p-values
+  # Levelplot
+  library(lattice)
+  levelplot(t(P_values), xlab = "PCs", ylab = "Batches", main = "Levelplot P-values") # Levelplot der p-values
+  levelplot(t(ALLMvalueRemain[,c(1:3)]), xlab = "PCs", ylab = "Patients", main = "Levelplot PCA") # Levelplot der PCA$x-Werte
+  pca_remain_x_abs <- abs(pca_remain$x[,c(1:3)])
+  levelplot(t(pca_remain_x_abs), xlab = "PCs", ylab = "Patients", main = "Plot PCA Betrag") # Levelplot des Betrags der PCA$x-Werte
+  
+# Loading plotten 
+pca_rot_PC1 <- pca_remain$rotation[,1] # Verwenden der PC1
+pca_rot_PC1_Abs <- abs(pca_rot_PC1) # Loading Betrag berechnen
+pca_rot_PC1_sort <- sort(pca_rot_PC1_Abs, decreasing = TRUE) # Loading sortieren
+plot(pca_rot_PC1_sort, type = "l",main = "Loading plot PC1", ylab = "Loading", xlab = "Genes")
+
+# K-Means (Silhouette-Plot)
+M_km <- kmeans(t(x = ALLMvalueRemain), centers = 2, nstart = 10)
+M_km
 D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
 library(cluster)
-silh <- silhouette(Mkm$cluster,D) # Silhouettenplot
-plot(silh, ylab = "Patient")
+silh <- silhouette(M_km$cluster,D) # Silhouettenplot der Patienten
+plot(silh, ylab = "Patient") # 2 Cluster erkennbar
 ```
+
+
+
+###Step3 - Testing for differentially methylated regions (DMR)
+
+```{r}
+# T-test
+  Mvalues_noTO <- ALLMvalueRemain[,c(4:10)] # Tonsil-Patienten herausgenommen
+  Mvalues_healthy <- Mvalues_noTO[,c(1,2)] # Matrix splitten in healthy und disease
+  Mvalues_disease <- Mvalues_noTO[,c(3:7)]
+
+t_test <- c(1:709) # Erstellung Liste fÃ¼r p-values
+
+for (i in 1:length(t_test)) {
+    t_test[i] <- t.test(Mvalues_healthy[i,],Mvalues_disease[i,])$p.value
+}
+  # Adjust p-value multiple comparison
+  p_correction <- p.adjust(t_test, method = "holm", n = length(t_test))
+  p_correction <- order(p_correction) # Korrigierte p-values absteigend ordnen -> Position wird ausgegeben
+  t_test_order <- order(t_test) # Aufsteigend ordnen -> Position wird angegeben (Gleiche Anordnung wie bei p_correction)
+  t_test_sort <- sort(t_test) # Aufsteigend ordnen -> Wert wird angegeben
+
+t_test20 <- t_test_order[c(1:20)] # Erste 20 Werte behalten
+ALLMvalueRemain20 <- ALLMvalueRemain[t_test20,] # Dataframe mit verbliebenene M-values (20)
+ALLBetaRemain20 <- ALLpromotorBeta[t_test20,]   # Dataframe mit verbliebenen Beta-values (20)
+
+threshold <- sum(t_test_sort <= 0.05) # Threshold auf p = 0.05 gesetzt
+t_test_threshold <- t_test_order[c(1:threshold)]
+ALLMvalueRemain_threshold <- ALLMvalueRemain[t_test_threshold,] # Dataframe mit verbliebenene M-values (99)
+ALLBetaRemain_threshold <- ALLpromotorBeta[t_test_threshold,]   # Dataframe mit verbliebenen Beta-values (99)
+
+# Visualisierung (Levelplot)
+library(lattice)
+  # Beta-value 20 verbliebene Genes
+  ALLBetaRemain20_plot <- as.matrix(ALLBetaRemain20) # Konvertierung zur Matrix
+  rownames(ALLBetaRemain20_plot) <- c(1:nrow(ALLBetaRemain20)) # Anpassen der Zeilennamen
+  levelplot(ALLBetaRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of 20 remaining Genes") 
+  # M-value 20 verbliebene Genes
+  for (i in 1:20) {
+      for(j in 1:10){
+          ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur fÃ¼r den Fall, dass Variablen nicht numerisch
+      }
+  }
+  ALLMvalueRemain20_plot <- as.matrix(ALLMvalueRemain20) 
+  rownames(ALLMvalueRemain20_plot) <- c(1:nrow(ALLMvalueRemain20))
+  levelplot(ALLMvalueRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of 20 remaining Genes") # Levelplot 20 verbliebenen M-values
+  # Beta-values threshold p=0.05
+  ALLBetaRemain_threshold_plot <- as.matrix(ALLBetaRemain_threshold)
+  rownames(ALLBetaRemain_threshold_plot) <- c(1:nrow(ALLBetaRemain_threshold))
+  levelplot(ALLBetaRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot verbliebener beta-values hinter 0.05 threshold
+  # M-values threshold p=0.05
+  ALLMvalueRemain_threshold_plot <- as.matrix(ALLMvalueRemain_threshold)
+  rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
+  levelplot(ALLMvalueRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
+
+```
+
+
+
+###Step4 - Logistical regression
+
+```{r}
+# Logistical regression (threshold bei 99 Genes)
+Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren damit Patienten auf y-Achse
+Tumor <- factor(c(rep("0",5),rep("1",5)))
+Lg_Mvalues <- cbind(Lg_Mvalues,Tumor) # Einbinden einer Spalte mit Bezeichnung ob Tumor ja/nein
+
+LGpred <- as.matrix(c(1:10))  # Erstellung matrix fÃ¼r Ergebnisse
+for (i in 1:nrow(ALLMvalueRemain_threshold)) {
+     glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data
+     = Lg_Mvalues) # Logistical regression einzelner Gene
+     pred <- as.matrix(predict(glm99, type = "response")) # Anwendung zur Vorhersage
+     LGpred <- cbind(LGpred,pred) # Matrix mit allen Ergebnissen der prediction
+}
+View(LGpred)
+LGpred <- LGpred[,-1]
+
+levelplot(t(LGpred), xlab = "Genes", ylab = "Patients", main = "Levelplot of logistical regression prediction") # Visualisierung
+```
+
+###Conclusion
