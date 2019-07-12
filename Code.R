@@ -7,13 +7,8 @@ ALLCovMeans <- rowMeans(ALLpromotorCov)   # Liste mit Mittelwert der Coverage pr
 ALLCovMeansLog <- log(ALLCovMeans)        # Bildung Logarithmus für Plot
 
 # Plotten + Speichern der Daten mit Histogramm
-png(filename = "E:/Studium HD/4. FS/Bioinfo05/Hist_noLOG.png", width = 1000, height = 500)
 hist(ALLCovMeans, xlab = "Means of coverage values", ylab = , xlim = c(0,10000), ylim = c(0,4000), breaks = 1000, lwd = 1) # Nicht logarithmisch
-dev.off()
-
-png(filename = "E:/Studium HD/4. FS/Bioinfo05/Hist_LOG.png", width = 1000, height = 500)
 hist(ALLCovMeansLog, xlab = "Logarithmic means of coverage values", ylab = , xlim = c(0,13), ylim = c(0,250), breaks = 1000, lwd = 1)  # Logarithmisch
-dev.off()
 
 # Threshold bestimmen
 quantile(ALLCovMeans, probs = c(0.05, 0.95),na.rm = TRUE) # Gibt für 5% 139, für 95% 5957 -> 5% zu hohe Grenze 
@@ -156,10 +151,50 @@ plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei P
   batcheffect2 <- ggplot(pcax12, aes(x = PC1, y = PC2, colour = date, shape = provider, size = tissue))
   batcheffect2 + geom_point()
 
+# Statistical Tests regarding Batch effects
+sample_annotation <- read.csv("sample_annotation.csv")
+  # Wilcoxon Rank Test
+  wilcoxon_p1 <- wilcox.test(pca$x[,1] ~ sample_annotation$TISSUE_TYPE) # Tissuetype von PC1-3 
+  wilcoxon_p2 <- wilcox.test(pca$x[,2] ~ sample_annotation$TISSUE_TYPE)
+  wilcoxon_p3 <- wilcox.test(pca$x[,3] ~ sample_annotation$TISSUE_TYPE)
+
+  wilcoxon_p4 <- wilcox.test(pca$x[,1] ~ sample_annotation$DISEASE) # Disease PC1-3 
+  wilcoxon_p5 <- wilcox.test(pca$x[,2] ~ sample_annotation$DISEASE)
+  wilcoxon_p6 <- wilcox.test(pca$x[,3] ~ sample_annotation$DISEASE)
+
+  # Kruskal Wallis Test
+  sample_annotation$BIOMATERIAL_PROVIDER <- as.factor(sample_annotation$BIOMATERIAL_PROVIDER) # Sonst Error Gruppenlevel muss endlich sein
+  kruskal_p1 <- kruskal.test(pca$x[,1] ~ sample_annotation$BIOMATERIAL_PROVIDER) # Provider PC1-3
+  kruskal_p2 <- kruskal.test(pca$x[,2] ~ sample_annotation$BIOMATERIAL_PROVIDER)
+  kruskal_p3 <- kruskal.test(pca$x[,3] ~ sample_annotation$BIOMATERIAL_PROVIDER)
+
+  sample_annotation$FIRST_SUBMISSION_DATE <- as.factor(sample_annotation$FIRST_SUBMISSION_DATE)
+  kruskal_p4 <- kruskal.test(pca$x[,1] ~ sample_annotation$FIRST_SUBMISSION_DATE) # Date PC1-3 
+  kruskal_p5 <- kruskal.test(pca$x[,2] ~ sample_annotation$FIRST_SUBMISSION_DATE)
+  kruskal_p6 <- kruskal.test(pca$x[,3] ~ sample_annotation$FIRST_SUBMISSION_DATE)
+
+
+# Visualisation
+  # Heatmap
+  Tissue_Type <- c(0.03,0.017,0.83)
+  Disease <- c(0.008,0.69,1)
+  Provider <- c(0.097,0.097,0.458)
+  Submission_Date <- c(0.086,0.617,0.726)
+  P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date) # Erstellen matrix mit p-values
+  heatmap(P_values, main = "Heatmap P-values", Colv = NA, Rowv = NA, col = cm.colors(256)) # Heatmap der p-values
+  
+  # Levelplot
+  library(lattice)
+  levelplot(t(P_values), xlab = "PCs", ylab = "Batches", main = "Levelplot P-values (Batch effect)") # Levelplot der p-values
+  pca_x_abs <- abs(pca$x[,c(1:3)])
+  levelplot(t(pca_x_abs), xlab = "PCs", ylab = "Patients", main = "Plot PCA Betrag") # Levelplot des Betrags der PCA$x-Werte
+  
+
 # Betrachtung der Gene
 pcar12 <- data.frame(pca$rotation[,c(1,2)])
 ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
-     
+ALLMGen <- ALLMvalue[c("ENSG00000039068","ENSG00000147889","ENSG00000147883","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000196730","ENSG00000185345"),] # relevanten Gene nach Literatur
+
   # Filtern der Gene mit größter Varianz
   pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
   pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
@@ -171,60 +206,13 @@ ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
   plot(pcaRotAbssort, type = "l", main = "Plot der PC1 Loading", xlab = "Genes", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam)
 
   # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
-  counts <- c(1:54609) # Vektor für Genposition
-  pcaRotVar <- cbind(pcaRotVar,counts) # Einbinden des Vektor
-  pcaRotVar <- order(pcaRotVar[,1], decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
+  pcaRotVar <- order(pcaRotVar, decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
   
   # Löschen der Gene hinter Varianz-elbow  
-  pcaRotVar <- pcaRotVar[-c(701:54609)] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
+  pcaRotVar <- pcaRotVar[-c(701:length(pca$rotation))] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
   ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
   ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen) # Miteinbinden der relevanten Gene (sind zuvor nicht im Dataframe gewesen)
       # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
-
-
-# Statistical Tests
-pca_remain <- prcomp(t(ALLMvalueRemain)) 
-  # Wilcoxon Rank Test
-  wilcoxon_p1 <- wilcox.test(pca_remain$x[,1] ~ sample_annotation$TISSUE_TYPE) # Tissuetype von PC1-3 
-  wilcoxon_p2 <- wilcox.test(pca_remain$x[,2] ~ sample_annotation$TISSUE_TYPE)
-  wilcoxon_p3 <- wilcox.test(pca_remain$x[,3] ~ sample_annotation$TISSUE_TYPE)
-
-  wilcoxon_p4 <- wilcox.test(pca_remain$x[,1] ~ sample_annotation$DISEASE) # Disease PC1-3 
-  wilcoxon_p5 <- wilcox.test(pca_remain$x[,2] ~ sample_annotation$DISEASE)
-  wilcoxon_p6 <- wilcox.test(pca_remain$x[,3] ~ sample_annotation$DISEASE)
-
-  # Kruskal Wallis Test
-  sample_annotation$BIOMATERIAL_PROVIDER <- as.factor(sample_annotation$BIOMATERIAL_PROVIDER) # Sonst Error Gruppenlevel muss endlich sein
-  kruskal_p1 <- kruskal.test(pca_remain$x[,1] ~ sample_annotation$BIOMATERIAL_PROVIDER) # Provider PC1-3
-  kruskal_p2 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$BIOMATERIAL_PROVIDER)
-  kruskal_p3 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$BIOMATERIAL_PROVIDER)
-
-  sample_annotation$FIRST_SUBMISSION_DATE <- as.factor(sample_annotation$FIRST_SUBMISSION_DATE)
-  kruskal_p4 <- kruskal.test(pca_remain$x[,1] ~ sample_annotation$FIRST_SUBMISSION_DATE) # Date PC1-3 
-  kruskal_p5 <- kruskal.test(pca_remain$x[,2] ~ sample_annotation$FIRST_SUBMISSION_DATE)
-  kruskal_p6 <- kruskal.test(pca_remain$x[,3] ~ sample_annotation$FIRST_SUBMISSION_DATE)
-
-
-# Visualisation
-  # Heatmap
-  Tissue_Type <- c(0.03,0.017,0.83)
-  Disease <- c(0.008,0.69,1)
-  Provider <- c(0.097,0.097,0.458)
-  Submission_Date <- c(0.086,0.617,0.726)
-  P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date) # Erstellen matrix mit p-values
-  heatmap(P_values, main = "Heatmap P-values", Colv = NA, Rowv = NA, col = cm.colors(256)) # Heatmap der p-values
-  # Levelplot
-  library(lattice)
-  levelplot(t(P_values), xlab = "PCs", ylab = "Batches", main = "Levelplot P-values") # Levelplot der p-values
-  levelplot(t(ALLMvalueRemain[,c(1:3)]), xlab = "PCs", ylab = "Patients", main = "Levelplot PCA") # Levelplot der PCA$x-Werte
-  pca_remain_x_abs <- abs(pca_remain$x[,c(1:3)])
-  levelplot(t(pca_remain_x_abs), xlab = "PCs", ylab = "Patients", main = "Plot PCA Betrag") # Levelplot des Betrags der PCA$x-Werte
-  
-# Loading plotten 
-pca_rot_PC1 <- pca_remain$rotation[,1] # Verwenden der PC1
-pca_rot_PC1_Abs <- abs(pca_rot_PC1) # Loading Betrag berechnen
-pca_rot_PC1_sort <- sort(pca_rot_PC1_Abs, decreasing = TRUE) # Loading sortieren
-plot(pca_rot_PC1_sort, type = "l",main = "Loading plot PC1", ylab = "Loading", xlab = "Genes")
 
 # K-Means (Silhouette-Plot)
 M_km <- kmeans(t(x = ALLMvalueRemain), centers = 2, nstart = 10)
@@ -233,6 +221,7 @@ D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
 library(cluster)
 silh <- silhouette(M_km$cluster,D) # Silhouettenplot der Patienten
 plot(silh, ylab = "Patient") # 2 Cluster erkennbar
+
 
 
 # T-test
@@ -284,7 +273,11 @@ library(lattice)
   rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
   levelplot(ALLMvalueRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
 
-
+  # Relevante Gene nur zum Vergleich
+  ALLMGen_plot <- ALLMGen
+  colnames(ALLMGen_plot) <- c(1:ncol(ALLMGen))
+  levelplot(as.matrix(t(ALLMGen_plot)), xlab = "Patients", ylab = "Genes", main = "Levelplot M-values of relevant Genes") # Levelplot relevanter Gene
+  
 # Logistical regression (threshold bei 99 Genes)
 Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren damit Patienten auf y-Achse
 Tumor <- factor(c(rep("0",5),rep("1",5)))
