@@ -273,17 +273,17 @@ library(lattice)
   rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
   levelplot(ALLMvalueRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
 
-  # Relevante Gene nur zum Vergleich
+  # Ausgewählte Gene nur zum Vergleich
   ALLMGen_plot <- ALLMGen
   colnames(ALLMGen_plot) <- c(1:ncol(ALLMGen))
-  levelplot(as.matrix(t(ALLMGen_plot)), xlab = "Patients", ylab = "Genes", main = "Levelplot M-values of relevant Genes") # Levelplot relevanter Gene
+  levelplot(as.matrix(t(ALLMGen_plot)), xlab = "Patients", ylab = "Genes", main = "Levelplot M-values of selected Genes") # Levelplot relevanter Gene
   
 # Logistical regression (threshold bei 99 Genes)
 Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren damit Patienten auf y-Achse
 Tumor <- factor(c(rep("0",5),rep("1",5)))
 Lg_Mvalues <- cbind(Lg_Mvalues,Tumor) # Einbinden einer Spalte mit Bezeichnung ob Tumor ja/nein
 
-LGpred <- as.matrix(c(1:10))  # Erstellung matrix für Ergebnisse
+LGpred <- as.matrix(c(1:10))  # Erstellung Matrix für Ergebnisse
 for (i in 1:nrow(ALLMvalueRemain_threshold)) {
      glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data
      = Lg_Mvalues) # Logistical regression einzelner Gene
