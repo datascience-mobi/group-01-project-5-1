@@ -176,10 +176,10 @@ sample_annotation <- read.csv("sample_annotation.csv")
 
 # Visualisation
   # Heatmap
-  Tissue_Type <- c(0.03,0.017,0.83)
-  Disease <- c(0.008,0.69,1)
-  Provider <- c(0.097,0.097,0.458)
-  Submission_Date <- c(0.086,0.617,0.726)
+  Tissue_Type <- c(wilcoxon_p1$p.value,wilcoxon_p2$p.value,wilcoxon_p3$p.value)
+  Disease <- c(wilcoxon_p4$p.value,wilcoxon_p5$p.value,wilcoxon_p6$p.value)
+  Provider <- c(kruskal_p1$p.value,kruskal_p2$p.value,kruskal_p3$p.value)
+  Submission_Date <- c(kruskal_p4$p.value,kruskal_p5$p.value,kruskal_p6$p.value)
   P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date) # Erstellen matrix mit p-values
   heatmap(P_values, main = "Heatmap P-values", Colv = NA, Rowv = NA, col = cm.colors(256)) # Heatmap der p-values
   
@@ -193,7 +193,6 @@ sample_annotation <- read.csv("sample_annotation.csv")
 # Betrachtung der Gene
 pcar12 <- data.frame(pca$rotation[,c(1,2)])
 ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
-ALLMGen <- ALLMvalue[c("ENSG00000039068","ENSG00000147889","ENSG00000147883","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000196730","ENSG00000185345"),] # relevanten Gene nach Literatur
 
   # Filtern der Gene mit größter Varianz
   pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
@@ -211,6 +210,7 @@ ALLMGen <- ALLMvalue[c("ENSG00000039068","ENSG00000147889","ENSG00000147883","EN
   # Löschen der Gene hinter Varianz-elbow  
   pcaRotVar <- pcaRotVar[-c(701:length(pca$rotation))] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
   ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
+  ALLMGen <- ALLMvalue[c("ENSG00000039068","ENSG00000147889","ENSG00000147883","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000196730","ENSG00000185345"),] # relevanten Gene nach Literatur
   ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen) # Miteinbinden der relevanten Gene (sind zuvor nicht im Dataframe gewesen)
       # ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
 
@@ -236,18 +236,18 @@ for (i in 1:length(t_test)) {
 }
   # Adjust p-value multiple comparison
   p_correction <- p.adjust(t_test, method = "holm", n = length(t_test))
-  p_correction <- order(p_correction) # Korrigierte p-values absteigend ordnen -> Position wird ausgegeben
-  t_test_order <- order(t_test) # Aufsteigend ordnen -> Position wird angegeben (Gleiche Anordnung wie bei p_correction)
-  t_test_sort <- sort(t_test) # Aufsteigend ordnen -> Wert wird angegeben
-
-t_test20 <- t_test_order[c(1:20)] # Erste 20 Werte behalten
+  p_correction_order <- order(p_correction) # Korrigierte p-values aufsteigend ordnen -> Position wird ausgegeben
+  p_correction_sort <- sort(p_correction)# Aufsteigend ordnen -> Wert wird angegeben
+  
+  
+t_test20 <- p_correction_order[c(1:20)] # Erste 20 Werte behalten der lorrigierten p-values
 ALLMvalueRemain20 <- ALLMvalueRemain[t_test20,] # Dataframe mit verbliebenene M-values (20)
 ALLBetaRemain20 <- ALLpromotorBeta[t_test20,]   # Dataframe mit verbliebenen Beta-values (20)
 
-threshold <- sum(t_test_sort <= 0.05) # Threshold auf p = 0.05 gesetzt
-t_test_threshold <- t_test_order[c(1:threshold)]
-ALLMvalueRemain_threshold <- ALLMvalueRemain[t_test_threshold,] # Dataframe mit verbliebenene M-values (99)
-ALLBetaRemain_threshold <- ALLpromotorBeta[t_test_threshold,]   # Dataframe mit verbliebenen Beta-values (99)
+threshold <- sum(p_correction_sort <= 0.05) # Threshold auf p = 0.05 gesetzt der korrigierten p-values
+t_test_threshold <- p_correction_order[c(1:threshold)]
+ALLMvalueRemain_threshold <- ALLMvalueRemain[t_test_threshold,] # Dataframe mit verbliebenene M-values (12)
+ALLBetaRemain_threshold <- ALLpromotorBeta[t_test_threshold,]   # Dataframe mit verbliebenen Beta-values (12)
 
 # Visualisierung (Levelplot)
 library(lattice)
@@ -264,6 +264,7 @@ library(lattice)
   ALLMvalueRemain20_plot <- as.matrix(ALLMvalueRemain20) 
   rownames(ALLMvalueRemain20_plot) <- c(1:nrow(ALLMvalueRemain20))
   levelplot(ALLMvalueRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of 20 remaining Genes") # Levelplot 20 verbliebenen M-values
+  
   # Beta-values threshold p=0.05
   ALLBetaRemain_threshold_plot <- as.matrix(ALLBetaRemain_threshold)
   rownames(ALLBetaRemain_threshold_plot) <- c(1:nrow(ALLBetaRemain_threshold))
