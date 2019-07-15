@@ -122,7 +122,7 @@ pca <- prcomp(t(ALLMvalue))  # Performs PCA on data matrix and returns results a
 
 # Plotten der Varianz um Daten zu filtern, mit welchen gearbeitet wird
 pVar <- (pca$sdev)^2 # Varianz berechnen
-plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs") # Elbow bei PC3 -> Nur PC1-3 aussagakräftig
+plot(pVar, type = "l",main = "Plot of the PCA variance", xlab = "PCs", ylab = "Variance") # Elbow bei PC3 -> Nur PC1-3 aussagakräftig
      
 # ggPlot
   # Betrachtung der Patienten
@@ -187,7 +187,8 @@ sample_annotation <- read.csv("sample_annotation.csv")
   library(lattice)
   levelplot(t(P_values), xlab = "PCs", ylab = "Batches", main = "Levelplot P-values (Batch effect)") # Levelplot der p-values
   pca_x_abs <- abs(pca$x[,c(1:3)])
-  levelplot(t(pca_x_abs), xlab = "PCs", ylab = "Patients", main = "Plot PCA Betrag") # Levelplot des Betrags der PCA$x-Werte
+  rownames(pca_x_abs) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+  levelplot(t(pca_x_abs), xlab = "PCs", ylab = "Patients", main = "Levelplot absolute value PCA") # Levelplot des Betrags der PCA$x-Werte
   
 
 # Betrachtung der Gene
@@ -197,12 +198,12 @@ ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
   # Filtern der Gene mit größter Varianz
   pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
   pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
-  plot(pcaRotVarsort, type = "l", main = "Plot der Genvarianz", xlab = "Genes", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 700)
+  plot(pcaRotVarsort, type = "l", main = "Plot of the gen variance (PCA)", xlab = "Genes", ylab ="PCA variance of gene loading", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 700)
 
   # Filtern der Gene nach Loading
   pcaRotAbs <- abs(pca$rotation[,1]) # Betrag der Loadings berechnen
   pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE) # Loadings absteigend sortieren
-  plot(pcaRotAbssort, type = "l", main = "Plot der PC1 Loading", xlab = "Genes", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam)
+  plot(pcaRotAbssort, type = "l", main = "Plot der PC1 Loading", xlab = "Genes", ylab = "PC1 absolute value of gene loading", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam)
 
   # Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
   pcaRotVar <- order(pcaRotVar, decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
@@ -220,7 +221,7 @@ M_km
 D <- dist(t(ALLMvalueRemain)) # Distanzmatrix
 library(cluster)
 silh <- silhouette(M_km$cluster,D) # Silhouettenplot der Patienten
-plot(silh, ylab = "Patient") # 2 Cluster erkennbar
+plot(silh, ylab = "Patient", main = "Silhouette plot of patient clustering") # 2 Cluster erkennbar
 
 
 
@@ -254,6 +255,7 @@ library(lattice)
   # Beta-value 20 verbliebene Genes
   ALLBetaRemain20_plot <- as.matrix(ALLBetaRemain20) # Konvertierung zur Matrix
   rownames(ALLBetaRemain20_plot) <- c(1:nrow(ALLBetaRemain20)) # Anpassen der Zeilennamen
+  colnames(ALLBetaRemain20_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
   levelplot(ALLBetaRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of 20 remaining Genes") 
   # M-value 20 verbliebene Genes
   for (i in 1:20) {
@@ -263,21 +265,25 @@ library(lattice)
   }
   ALLMvalueRemain20_plot <- as.matrix(ALLMvalueRemain20) 
   rownames(ALLMvalueRemain20_plot) <- c(1:nrow(ALLMvalueRemain20))
+  colnames(ALLMvalueRemain20_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
   levelplot(ALLMvalueRemain20_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of 20 remaining Genes") # Levelplot 20 verbliebenen M-values
   
   # Beta-values threshold p=0.05
   ALLBetaRemain_threshold_plot <- as.matrix(ALLBetaRemain_threshold)
   rownames(ALLBetaRemain_threshold_plot) <- c(1:nrow(ALLBetaRemain_threshold))
+  colnames(ALLBetaRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
   levelplot(ALLBetaRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot Beta-values of remaining Genes") # Levelplot verbliebener beta-values hinter 0.05 threshold
   # M-values threshold p=0.05
   ALLMvalueRemain_threshold_plot <- as.matrix(ALLMvalueRemain_threshold)
   rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
+  colnames(ALLMvalueRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
   levelplot(ALLMvalueRemain_threshold_plot, xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of remaining Genes") # Levelplot verbliebener M-values hinter 0.05 threshold
 
   # Ausgewählte Gene nur zum Vergleich
   ALLMGen_plot <- ALLMGen
-  colnames(ALLMGen_plot) <- c(1:ncol(ALLMGen))
-  levelplot(as.matrix(t(ALLMGen_plot)), xlab = "Patients", ylab = "Genes", main = "Levelplot M-values of selected Genes") # Levelplot relevanter Gene
+  rownames(ALLMGen_plot) <- c("CDH1","p16","p15","NES-1","DKK-3","CDH13","TMS-1","DAPK-1","PRKN")
+  colnames(ALLMGen_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+  levelplot(as.matrix(ALLMGen_plot), xlab = "Genes", ylab = "Patients", main = "Levelplot M-values of selected Genes") # Levelplot relevanter Gene
   
 # Logistical regression (threshold bei 99 Genes)
 Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren damit Patienten auf y-Achse
@@ -294,6 +300,7 @@ for (i in 1:nrow(ALLMvalueRemain_threshold)) {
 View(LGpred)
 LGpred <- LGpred[,-1]
 
-levelplot(t(LGpred), xlab = "Genes", ylab = "Patients", main = "Levelplot of logistical regression prediction") # Visualisierung
+rownames(LGpred) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(t(LGpred), xlab = "Genes", ylab = "Patients", main = "Levelplot of logistical regressed prediction") # Visualisierung
 
 
