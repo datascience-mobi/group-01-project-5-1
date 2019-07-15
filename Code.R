@@ -16,7 +16,7 @@ ALLpromotorCov1 <- ALLpromotorCov
 ALLpromotorCov1[ALLpromotorCov > 7753] <- NA # Alle Werte über 98,5% = NA
 ALLpromotorCov1[ALLpromotorCov < 28] <- NA  # Alle Werte unter 1,5% = NA
 
-# Isolieren der relevanten Gene (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PRKN, PTEN, p73, APAF1, LATS1)
+# Isolieren der selected genes (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PRKN, PTEN, p73, APAF1, LATS1)
 ALLCovGen <- ALLpromotorCov[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),]
 ALLCov1Gen <- ALLpromotorCov1[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),] 
 
@@ -42,7 +42,7 @@ for(i in 1:nrow(ALLpromotorCov1)){                      # Abtasten der Zeilen
 }
 
 repeat{
-    # Eliminieren Gene mit >=4 NAs bei den disease Patienten  
+    # Eliminieren Gene mit >=4 NAs bei den healthy Patienten  
     for (i in 1:nrow(ALLpromotorBeta)) {
       for (j in 1:ncol(ALLpromotorBeta)) {       
         if(sum(is.na(ALLpromotorBeta[i,c(1:5)]))>=4){
@@ -51,15 +51,6 @@ repeat{
       }
     }
     dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
-
-    # for (i in 1:nrow(ALLBetaGen)) {  
-    #   for (j in 1:ncol(ALLBetaGen)) {       # Nur relevante Gene (Start Anzahl: 14)
-    #     if(sum(is.na(ALLBetaGen[i,c(1:5)]))>=4){
-    #         ALLBetaGen <- ALLBetaGen[-i,]
-    #     }
-    #   }
-    # }
-    # View(ALLBetaGen) # End Anzahl: 9
 
     # Eliminieren Gene mit >=4 NAs bei den disease Patienten
     for (i in 1:nrow(ALLpromotorBeta)) {
