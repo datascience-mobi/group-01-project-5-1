@@ -295,15 +295,29 @@ Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren da
 Tumor <- factor(c(rep("0",5),rep("1",5)))
 Lg_Mvalues <- cbind(Lg_Mvalues,Tumor) # Einbinden einer Spalte mit Bezeichnung ob Tumor ja/nein
 
-LGpred <- as.matrix(c(1:10))  # Erstellung Matrix für Ergebnisse
-for (i in 1:nrow(ALLMvalueRemain_threshold)) {
-  glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data
-               = Lg_Mvalues) # Logistical regression einzelner Gene
-  pred <- as.matrix(predict(glm99, type = "response")) # Anwendung zur Vorhersage
-  LGpred <- cbind(LGpred,pred) # Matrix mit allen Ergebnissen der prediction
-}
-View(LGpred)
-LGpred <- LGpred[,-1]
+#LGpred <- as.matrix(c(1:10))  # Erstellung Matrix für Ergebnisse
+#for (i in 1:nrow(ALLMvalueRemain_threshold)) {
+#  glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data
+#               = Lg_Mvalues) # Logistical regression einzelner Gene
+#  pred <- as.matrix(predict(glm99, type = "response")) # Anwendung zur Vorhersage
+#  LGpred <- cbind(LGpred,pred) # Matrix mit allen Ergebnissen der prediction
+#}
+#View(LGpred)
+#LGpred <- LGpred[,-1]
+#
+#rownames(LGpred) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+#levelplot(t(LGpred), xlab = "Promoters", ylab = "Patients", main = "Levelplot of logistical regression prediction") # Visualisierung
 
-rownames(LGpred) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(t(LGpred), xlab = "Promoters", ylab = "Patients", main = "Levelplot of logistical regression prediction") # Visualisierung
+Lg_Mvalues2 <- Lg_Mvalues
+healthy = which(Lg_Mvalues2$Tumor=="0")
+healthy.train = sample(healthy,floor(0.75*length(healthy)))
+cancer = which(Lg_Mvalues2$Tumor=="1")
+cancer.train = sample(cancer, floor(0.75*length(cancer)))
+train = c(healthy.train,cancer.train)
+train.set = Lg_Mvalues2[train, 1:10]
+test.set = Lg_Mvalues2[-train, 1:10]
+Tumor2 <- c(0,0,0,1,1,1)
+regression_model2 <- glm(formula = Tumor2 ~ ., family = binomial(link = "logit"), data = train.set)
+predict2 <- predict(regression_model2, newdata = test.set, type = "response")
+
+levelplot(t(predict2), xlab = "Promoters", ylab = "Patients", main = "Levelplot of logistical regression prediction")
