@@ -18,12 +18,12 @@ These CpGs are normally methylated. The exception to this are CpG-rich promoters
 
 **Tumour type**
 
-The type of cancer focussed here is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75% of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60% of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). Combining this knowledge with methylation status this project is comparing genome-wide methylation data of diseased and healthy patients. The samples were either taken from the bone marrow (healthy and diseased) or the tonsils (healthy) of 0-18 year old patients.
+The type of cancer focussed here is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75% of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60% of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). 
 
 
 **Biological question - goal**
 
-The identification of recurrent genetic changes can help for refined individual disease prognosis and management. In this project the focus lies on the methylation status of promotors in ALL related genes. Based on a publication of Roman-Gomez the methylation status of the 15 mentioned genes is validated and further search for promoters and affiliated genes relevant for ALL is conducted. The data opens the possibility for new potential biomarkers for ALL risk prognosis and therapy.
+Combining the need for treatment of mentioned tumour and the knowledge of methylation status this project is comparing genome-wide methylation data of diseased and healthy patients. The samples were either taken from the bone marrow (healthy and diseased) or the tonsils (healthy) of 0-18 year old patients. The identification of recurrent genetic changes can help for refined individual disease prognosis and management. In this project the focus lies on the methylation status of promotors in ALL related genes since methylation of promoters regulate their expression. Based on a publication of Roman-Gomez the methylation status of the 15 mentioned genes is validated and further search for promoters and affiliated genes relevant for ALL is conducted. The data opens the possibility for new potential biomarkers for ALL risk prognosis and therapy.
 
 
 
@@ -273,10 +273,10 @@ for (i in 1:nrow(ALLMvalue)) {
 
 ### Step2 - Principal component analysis
 
-Before testing single promoters for differential methylation the amount of data needs to be reduced through principal component analysis (PCA). The dataset is therefore represented through a number of principal components (PC) with the first PC equating to the highest variance of the data. Each PC is influenced by any promoter in the dataset. If the associated value is high the promoter is important for the principal component. If the value is low this particular promoter is not very important for the PC. 
+Before testing single promoters for differential methylation the amount of data needs to be reduced through principal component analysis (PCA). The dataset is therefore represented through a number of principal components (PC) with the first PC equating to the highest variance of the data. Each PC is influenced by any promoter in the dataset. If the loading is high the promoter is highly weighted for the principal component. If the loading is low this particular promoter is weighted much less for the PC. 
 Upon plotting the variance of each PC/promoter the relevant PCs/promoters can be filtered by cutting off at a noticeable elbow in the plot (as seen later). An elbow in the plot represents a cutoff point after which the following PCs/promoters do not add much information to the analysis. Therefore any following components/promoters can be removed without losing significant amounts of information about the data.
-Before selecting a principal component each PC has to be checked for batch effects. Batch effects are a form of technical error which creates correlations through e.g. submission date. The samples collected within a batch would then show correlation between each other without having a biological background. Therefore the PCs are checked for the absence of these effects.
-Next the previously selected PCs are plotted against each other in order to check for the best PC to pick for downstream analysis. Usually this is the first principal component (PC1). As a last step the variance of each promoter is sorted and plotted for the selected PC. Here an elbow is visible again which marks the significant promoters on its left side (high variance) and the not significant ones to its right (low variance). Finally the significant genes are isolated and proceed to the next major step.
+Before selecting a principal component each PC has to be checked for batch effects. Batch effects are a form of technical error which creates correlations through e.g. submission date. The samples collected within a batch would then show correlation between each other without having a biological background. Additionally the explained variance by the PCs would then originate from this technical error instead of the wanted biological background. Therefore the PCs are checked for the absence of these effects.
+Next the previously selected PCs are plotted against each other in order to check for the best PC to pick for downstream analysis. Usually this is the first principal component (PC1). As a last step the variance of each promoter is sorted and plotted for the selected PC. Here an elbow is visible again which marks the significant promoters on its left side (high variance) and the not significant ones to its right (low variance). Finally the significant genes which are relvant for this project are isolated and proceed to the next major step.
 
 
 **Performing PCA and selection of relevant PCs**
@@ -291,13 +291,13 @@ pca <- prcomp(t(ALLMvalue))
 Next the variance of the PCs is plotted to determine the elbow and therefore the relevant PCs. 
 ```{r Plotting variance of PCS}
 pVar <- (pca$sdev)^2
-pVar <- pVar
+pVarRel <- pVar
 pVarRel <- (pVar/sum(pVarRel))*100
 plot(pVarRel, type = "l",main = "Plot of PCA variance", xlab = "PCs", ylab = "Variance [%]", ylim = c(0,50), xaxt = "n")
 axis(side = 1, at = 1:10)
 ```
 
-In this case the cutoff was at PC3 so the first three principal components were kept for the following steps.
+In this case the cutoff was at PC3 so the first three principal components were kept for the following steps. Additionally as expected the PCs explain decreasing amounts of variance with PC1 explaining the most.
 
 
 **Visual testing for batch effects**
@@ -329,10 +329,12 @@ batcheffect2 <- ggplot(pcax12, aes(x = PC1, y = PC2, colour = date, shape = prov
 batcheffect2 + geom_point()
 ```
 
+Since a visual detection of batch effects proved difficult the PCs were tested via statistical tests to ensure that there were no batch effects.
+
 
 **Statistical testing for batch effects**
 
-In order to ascertain the absence of batch effects we used two different statistical tests: the Wilcoxon test and the Kruskal-Wallis test. Every single selected PC was reviewed for the respective batch effects. Using the Wilcoxon test the tissue type and disease status were investigated for batch effects.
+In order to ascertain the absence of batch effect two different statistical tests were used: the Wilcoxon test and the Kruskal-Wallis test. The Wilcoxon test was used whenever there were two factors e.g. healthy or diseased. On the other hand the kruskal-Wallis test was used when more than 2 factors were present e.g. different biomaterial providers. Every single selected PC was reviewed for the respective batch effects. Using the Wilcoxon test the tissue type and disease status were investigated for batch effects.
 ```{r Testing for batch effects (Wilcoxon)}
 sample_annotation <- read.csv("sample_annotation.csv")
   wilcoxon_p1 <- wilcox.test(pca$x[,1] ~ sample_annotation$TISSUE_TYPE)
@@ -343,7 +345,7 @@ sample_annotation <- read.csv("sample_annotation.csv")
   wilcoxon_p6 <- wilcox.test(pca$x[,3] ~ sample_annotation$DISEASE)
 ```
 
-On the other hand the biomaterial provider and first submission date were analysed with the Kruskal-Wallis test. Additionally both investigated columns were converted to factors in order to achieve finite values preventing computational errors.
+On the other hand the biomaterial provider and first submission date were analysed with the Kruskal-Wallis test. Additionally both investigated columns were converted to factors in order to achieve finite values preventing computational errors. The output of these tests were p-values which were then plotted in a next step.
 ```{r Testing for batch effects (Kruskal-Wallis)}
 sample_annotation$BIOMATERIAL_PROVIDER <- as.factor(sample_annotation$BIOMATERIAL_PROVIDER)
   kruskal_p1 <- kruskal.test(pca$x[,1] ~ sample_annotation$BIOMATERIAL_PROVIDER)
@@ -358,7 +360,7 @@ sample_annotation$FIRST_SUBMISSION_DATE <- as.factor(sample_annotation$FIRST_SUB
 
 **Visualisation of batch effect results**
 
-To visualize the results of the batch effect analysis a levelplot containing the p_values for each batch effect and PC is created. Any p-value above 0.05 defines the batch effect as not significant. If a PC therefore does not have any p-value below 0.05 it is free of batch effects.
+To visualize the results of the batch effect analysis a levelplot containing the p_values for each batch effect and PC is created. Any p-value above 0.05 defines the batch effect as not significant. The threshold of 0.05/5% was chosen since it represents a relatively wide possibility of there being a batch effect without risking a high probability of a false positive detection. If a PC does not have any p-value below 0.05 it is free of batch effects and therefore the variance it explains is related to a biological prozess rather than a technical error. In order to make this effect as clear as possible in the following plot any p-value above 0.05 (not significant) was converted to 1. On the other hand any value showing a significant batch effect (p <= 0.05) was converted to a 0.
 ```{r Creating levelplot for p-values}
 Tissue_Type <- c(wilcoxon_p1$p.value,wilcoxon_p2$p.value,wilcoxon_p3$p.value)
 Disease <- c(wilcoxon_p4$p.value,wilcoxon_p5$p.value,wilcoxon_p6$p.value)
@@ -380,12 +382,8 @@ for (i in 1:nrow(P_values)) {
 levelplot(t(P_values_batch), xlab = "PCs", ylab = "Batches", main = "P-values for different batch effects")
 ```
 
-When looking at the levelplot there is no p-value which is below 0.05 except for the disease row for PC1. This proves that the PC1 does show a significant difference between healthy and diseased patients which is exactly as expected from a first principal component.
-
-
-**Selection of segregating PC**
-
-Next, a PC needs to be chosen for later analysis which segregates the two patient groups. Using the information of the last levelplot the first principal component is selected for further analysis.
+When looking at the levelplot there is no p-value below 0.05 except for the tissue type for PC2. This showed again that the tonsil samples should be excluded from the downstream analysis because the differences explained by the variance were not related to the cancer and were therefore a threat for the results of this projects analysis.
+Since the first principal component did not show any batch effects and it explained the most variance it was selected for further analysis.
 
 
 **Selection of relevant promoters**
@@ -396,7 +394,7 @@ As a first test the absolute values of the loadings of the promoters were plotte
 pcaRotAbs <- abs(pca$rotation[,1])
 pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE)
 plot(pcaRotAbssort, type = "l", main = "Plot of PC1 loading", xlab = "Promoters", ylab = "PC1 absolute value of promoter loading", ylim = c(0,0.06), xlim = c(0,1000))
-abline(v=30, col = "red")
+abline(v=50, col = "red")
 ```
 
 However the elbow was located at approximately 50 promoters which is a very low amount of data to use. Therefore the variance of each promoter was used in a second try since this value is also related to the differentially methylated regions. Next the values ware again sorted in a decreasing order and plotted.
@@ -424,7 +422,7 @@ ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen)
 
 **K-Means clustering**
 
-As an additional step k-means clustering was performed to ensure the segregation of the patients into their respective groups. The seperation was analysed through a silhouette plot.
+As an additional step k-means clustering was performed with the 709 filtered promoters to ensure the segregation of the patients into their respective groups. Therefore the assignments of the patients to the two clusters were checked. Additionally the seperation was analysed through a silhouette plot.
 ```{r Clustering k-means and plotting silhouette}
 M_km <- kmeans(t(x = ALLMvalueRemain), centers = 2, nstart = 10)
 M_km$cluster
@@ -568,8 +566,8 @@ Next a matrix was created in which the predicted values were stored. Then each o
 ```{r Regressing logistically and predicting health status}
 LGpred <- as.matrix(c(1:10))
 for (i in 1:nrow(ALLMvalueRemain_threshold)) {
-     glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data = Lg_Mvalues)
-     pred <- as.matrix(predict(glm99, type = "response"))
+     glm12 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data = Lg_Mvalues)
+     pred <- as.matrix(predict(glm12, type = "response"))
      LGpred <- cbind(LGpred,pred)
 }
 LGpred <- LGpred[,-1]
@@ -582,7 +580,7 @@ levelplot(t(LGpred), xlab = "Promoters", ylab = "Patients",
 main = "Levelplot of logistically regressed prediction")
 ```
 
-Unfortunately the model was not very accurate in predicting the health status of the patients.
+Unfortunately the model was unreliable in predicting the health status of the patients. This was mostly related to the very low amount of patients used for the creation of this model.
 
 
 ###Results?
