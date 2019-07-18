@@ -291,7 +291,10 @@ pca <- prcomp(t(ALLMvalue))
 Next the variance of the PCs is plotted to determine the elbow and therefore the relevant PCs. 
 ```{r Plotting variance of PCS}
 pVar <- (pca$sdev)^2
-plot(pVar, type = "l",main = "Plot of PCA variance", xlab = "PCs", ylab = "Variance")
+pVar <- pVar
+pVarRel <- (pVar/sum(pVarRel))*100
+plot(pVarRel, type = "l",main = "Plot of PCA variance", xlab = "PCs", ylab = "Variance [%]", ylim = c(0,50), xaxt = "n")
+axis(side = 1, at = 1:10)
 ```
 
 In this case the cutoff was at PC3 so the first three principal components were kept for the following steps.
@@ -363,7 +366,18 @@ Provider <- c(kruskal_p1$p.value,kruskal_p2$p.value,kruskal_p3$p.value)
 Submission_Date <- c(kruskal_p4$p.value,kruskal_p5$p.value,kruskal_p6$p.value)
 P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date)
 library(lattice)
-levelplot(t(P_values), xlab = "PCs", ylab = "Batches", main = "Levelplot P-values (Batch effect)")
+P_values_batch <- P_values
+for (i in 1:nrow(P_values)) {
+    for (j in 1:ncol(P_values)) {
+        if(P_values[i,j] > 0.05){
+            P_values_batch[i,j] <- 1
+        }
+        else{
+            P_values_batch[i,j] <- 0
+        }
+    }
+}
+levelplot(t(P_values_batch), xlab = "PCs", ylab = "Batches", main = "P-values for different batch effects")
 ```
 
 When looking at the levelplot there is no p-value which is below 0.05 except for the disease row for PC1. This proves that the PC1 does show a significant difference between healthy and diseased patients which is exactly as expected from a first principal component.
@@ -371,15 +385,7 @@ When looking at the levelplot there is no p-value which is below 0.05 except for
 
 **Selection of segregating PC**
 
-Next a PC needs to be chosen for later analysis which segregates the two patient groups. Such a trend can be visualized through plotting the patients variance against the PCs. If a PC can sort the patient groups it is selected for downstream analysis.
-```{r Creating levelplot of PCs}
-library(lattice)
-pca_x_abs <- abs(pca$x[,c(1:3)])
-rownames(pca_x_abs) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(t(pca_x_abs), xlab = "PCs", ylab = "Patients", main = "Levelplot absolute value PCA")
-```
-
-Using the information of the last two levelplots the first principal component is selected for further analysis since it represents a good seperation of the two patient groups while not showing any significant batch effects.
+Next, a PC needs to be chosen for later analysis which segregates the two patient groups. Using the information of the last levelplot the first principal component is selected for further analysis.
 
 
 **Selection of relevant promoters**
@@ -389,7 +395,8 @@ As a first test the absolute values of the loadings of the promoters were plotte
 ```{r Plotting loading}
 pcaRotAbs <- abs(pca$rotation[,1])
 pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE)
-plot(pcaRotAbssort, type = "l", main = "Plot of PC1 loading", xlab = "Promoters", ylim = c(0,0.06), xlim = c(0,1000))
+plot(pcaRotAbssort, type = "l", main = "Plot of PC1 loading", xlab = "Promoters", ylab = "PC1 absolute value of promoter loading", ylim = c(0,0.06), xlim = c(0,1000))
+abline(v=30, col = "red")
 ```
 
 However the elbow was located at approximately 50 promoters which is a very low amount of data to use. Therefore the variance of each promoter was used in a second try since this value is also related to the differentially methylated regions. Next the values ware again sorted in a decreasing order and plotted.
@@ -397,6 +404,7 @@ However the elbow was located at approximately 50 promoters which is a very low 
 pcaRotVar <- apply(pca$rotation, 1, var)
 pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE)
 plot(pcaRotVarsort, type = "l", main = "Plot of promoter variance", xlab = "Promoters", ylab = "PC1 variance of promoters", ylim = c(0,0.0005), xlim = c(0,2000))
+abline(v=700, col = "red")
 ```
 
 The elbow for the variance was located at 700 promoters which represented a much wider base to support downstream analysis. Therefore these 700 relevant promoters were chosen and filtered.
@@ -419,6 +427,9 @@ ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen)
 As an additional step k-means clustering was performed to ensure the segregation of the patients into their respective groups. The seperation was analysed through a silhouette plot.
 ```{r Clustering k-means and plotting silhouette}
 M_km <- kmeans(t(x = ALLMvalueRemain), centers = 2, nstart = 10)
+M_km$cluster
+plot(M_km$cluster, type = "p", xlab = "Patients", ylab = "Clusters", yaxt = "n", pch = 19, main = "K-mean clusters of the samples/patients")
+axis(side = 2, at = 1:2)
 D <- dist(t(ALLMvalueRemain)) 
 library(cluster)
 silh <- silhouette(M_km$cluster,D)
@@ -489,8 +500,9 @@ Next a levelplot was created to visualize the Beta-values of the 20 most signifi
 library(lattice)
 ALLBetaRemain20_plot <- as.matrix(ALLBetaRemain20)
 rownames(ALLBetaRemain20_plot) <- c(1:nrow(ALLBetaRemain20))
- colnames(ALLBetaRemain20_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(ALLBetaRemain20_plot, xlab = "Promoters", ylab = "Patients", main = "Levelplot Beta-values of 20 remaining promoters") 
+ colnames(ALLBetaRemain20_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy", "Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease", "Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(ALLBetaRemain20_plot, xlab = "Promoters", ylab = "Patients",
+main = "Levelplot Beta-values of 20 remaining promoters") 
 ```
 
 The same was done for the M-values. Both matrices were prepared beforehand to ensure no computational errors during plotting.
@@ -502,8 +514,9 @@ for (i in 1:20) {
 }
 ALLMvalueRemain20_plot <- as.matrix(ALLMvalueRemain20) 
 rownames(ALLMvalueRemain20_plot) <- c(1:nrow(ALLMvalueRemain20))
- colnames(ALLMvalueRemain20_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(ALLMvalueRemain20_plot, xlab = "Promoters", ylab = "Patients", main = "Levelplot M-values of 20 remaining promoters")
+ colnames(ALLMvalueRemain20_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy", "Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease", "Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(ALLMvalueRemain20_plot, xlab = "Promoters", ylab = "Patients",
+main = "Levelplot M-values of 20 remaining promoters")
 ```
 
 
@@ -513,15 +526,17 @@ The same steps as above were repeated for the significant promoters ($\alpha <= 
 ```{r Creating levelplot of significant Bate-value}
 ALLBetaRemain_threshold_plot <- as.matrix(ALLBetaRemain_threshold)
 rownames(ALLBetaRemain_threshold_plot) <- c(1:nrow(ALLBetaRemain_threshold))
-colnames(ALLBetaRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(ALLBetaRemain_threshold_plot, xlab = "Promoters", ylab = "Patients", main = "Levelplot Beta-values of remaining promoters")
+colnames(ALLBetaRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy", "Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease", "Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(ALLBetaRemain_threshold_plot, xlab = "Promoters", ylab = "Patients", 
+main = "Levelplot Beta-values of remaining promoters")
 ```
 
 ```{r Creating levelplot of significant M-values}
 ALLMvalueRemain_threshold_plot <- as.matrix(ALLMvalueRemain_threshold)
 rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
-colnames(ALLMvalueRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(ALLMvalueRemain_threshold_plot, xlab = "Promoters", ylab = "Patients", main = "Levelplot M-values of remaining promoters")
+colnames(ALLMvalueRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy", "Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease", "Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(ALLMvalueRemain_threshold_plot, xlab = "Promoters", ylab = "Patients", 
+main = "Levelplot M-values of remaining promoters")
 ```
 
 
@@ -531,8 +546,9 @@ Lastly a levelplot depicting the M-values of the selected genes/promoters from t
 ```{r Plotting M-value levels of selected genes}
 ALLMGen_plot <- ALLMGen
 rownames(ALLMGen_plot) <- c("CDH1","p16","p15","NES-1","DKK-3","CDH13","TMS-1","DAPK-1","PRKN")
-colnames(ALLMGen_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(as.matrix(ALLMGen_plot), xlab = "Genes/Promoters", ylab = "Patients", main = "Levelplot M-values of selected genes/promoters")
+colnames(ALLMGen_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy", "Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease", "Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(as.matrix(ALLMGen_plot), xlab = "Genes/Promoters", ylab = "Patients", 
+main = "Levelplot M-values of selected genes/promoters")
 ```
 
 
@@ -561,8 +577,9 @@ LGpred <- LGpred[,-1]
 
 Finally the predicted values were plotted via a levelplot to check for the accuracy of the model.
 ```{r Plotting predictions}
-rownames(LGpred) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-levelplot(t(LGpred), xlab = "Promoters", ylab = "Patients", main = "Levelplot of logistically regressed prediction")
+rownames(LGpred) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy", "Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease", "Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
+levelplot(t(LGpred), xlab = "Promoters", ylab = "Patients", 
+main = "Levelplot of logistically regressed prediction")
 ```
 
 Unfortunately the model was not very accurate in predicting the health status of the patients.
