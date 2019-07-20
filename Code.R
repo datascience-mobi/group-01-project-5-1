@@ -1,26 +1,26 @@
 # Daten auslesen und Matrizen erstellen, mit denen gearbeitet wird
 `ALLBcell` <- readRDS("ALL-Bcell_list.RDS.gz")
 ALLpromotor <- ALLBcell[["promoters"]] 
-ALLpromotor <- ALLpromotor[,c(-4,-5,-6,-8,-9,-10)] # Spalten "Strand", "symbol", "entrezID", "GC", "C", "G" gelÃ¶scht
+ALLpromotor <- ALLpromotor[,c(-4,-5,-6,-8,-9,-10)] # Spalten "Strand", "symbol", "entrezID", "GC", "C", "G" gelöscht
 ALLpromotorCov <- ALLpromotor[,c(15:24)]  # Nur Coverage Daten
 ALLCovMeans <- rowMeans(ALLpromotorCov)   # Liste mit Mittelwert der Coverage pro Genabschnitt
-ALLCovMeansLog <- log(ALLCovMeans)        # Bildung Logarithmus fÃ¼r Plot
+ALLCovMeansLog <- log(ALLCovMeans)        # Bildung Logarithmus für Plot
 
 # Plotten der Daten mit Histogramm
 hist(ALLCovMeans, xlab = "Means of coverage values", ylab = , xlim = c(0,10000), ylim = c(0,4000), main = "Histogram of the coverage means", breaks = 1000, lwd = 1) # Nicht logarithmisch
 hist(ALLCovMeansLog, xlab = "Logarithmic means of coverage values", ylab = , xlim = c(0,13), ylim = c(0,250), main = "Histogram of the logarithmic coverage means",breaks = 1000, lwd = 1)  # Logarithmisch
 
 # Threshold bestimmen
-quantile(ALLCovMeans, probs = c(0.05, 0.95),na.rm = TRUE) # Gibt fÃ¼r 5% 139, fÃ¼r 95% 5957 -> 5% zu hohe Grenze 
+quantile(ALLCovMeans, probs = c(0.05, 0.95),na.rm = TRUE) # Gibt für 5% 139, für 95% 5957 -> 5% zu hohe Grenze 
 ALLpromotorCov1 <- ALLpromotorCov 
-ALLpromotorCov1[ALLpromotorCov > 7753] <- NA # Alle Werte Ã¼ber 98,5% = NA
+ALLpromotorCov1[ALLpromotorCov > 7753] <- NA # Alle Werte über 98,5% = NA
 ALLpromotorCov1[ALLpromotorCov < 28] <- NA  # Alle Werte unter 1,5% = NA
 
 # Isolieren der selected Genes (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PRKN, PTEN, p73, APAF1, LATS1)
 ALLCovGen <- ALLpromotorCov[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),]
 ALLCov1Gen <- ALLpromotorCov1[c("ENSG00000039068","ENSG00000078900","ENSG00000147889","ENSG00000147883","ENSG00000129757","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000120868","ENSG00000196730","ENSG00000185345","ENSG00000131023","ENSG00000171862"),] 
 
-# ÃœberprÃ¼fen wie groÃŸ der verworfene Anteil
+# Überprüfen wie groß der verworfene Anteil
 sum(!is.na(ALLpromotorCov)) # Summe aller Variablen in der Matrix die nicht NAs sind
 'rejectTotal' <- (1-(sum(!is.na(ALLpromotorCov1))/sum(!is.na(ALLpromotorCov)))) # Prozentsatz der verworfenen Daten insgesammt
 'reject' <- (1-(sum(!is.na(ALLCov1Gen))/sum(!is.na(ALLCovGen)))) # Prozentsatz der verworfenen Daten relevanter Gene
@@ -29,13 +29,13 @@ reject # Ausgabe
 
 # Bei Grenze von 99% bereits 3 Gene mit komplett NA (p73, APAF1, LATS1)
 # Grenze letztendlich bei 98,5% (7753) gesetzt: 18% der relevanten Gene verworfen -> 5 Gene (p73, APAF1, LATS1, p57, PTEN) -> bester Kompromiss
-# Insgesamt 6,3% aller Daten verworfen (nur Ã¼ber Threshold)
+# Insgesamt 6,3% aller Daten verworfen (nur über Threshold)
 
-# Ãœbertragen der Coverage NAs auf die Matrix der Beta-values
+# Übertragen der Coverage NAs auf die Matrix der Beta-values
 ALLpromotorBeta <- ALLpromotor[,c(5:14)]  # Erstellen Matrix mit nur Beta values 
 for(i in 1:nrow(ALLpromotorCov1)){                      # Abtasten der Zeilen
   for(j in 1:ncol(ALLpromotorCov1)){                    # Abtasten der Spalten
-    if(is.na(ALLpromotorCov1[i,j])){    # PrÃ¼fen ob NA
+    if(is.na(ALLpromotorCov1[i,j])){    # Prüfen ob NA
       ALLpromotorBeta[i,j] <- NA # Wenn ja, setze Wert bei Beta Values auf NA
     }
   } 
@@ -50,7 +50,7 @@ repeat{
       }
     }
   }
-  dim(ALLpromotorBeta) # dim(end) = 55111 (7,9% weg)
+  dim(ALLpromotorBeta) 
   
   # Eliminieren Gene mit >=4 NAs bei den disease Patienten
   for (i in 1:nrow(ALLpromotorBeta)) {
@@ -62,7 +62,8 @@ repeat{
   }
   dim(ALLpromotorBeta) 
   
-  # Insgesamt healthy (7,9%) + disease (1%) = 8,9% (5225) aller Gene verworfen 
+  # 2,4% aller Gene verworfen 
+  # Insgesamt -7,8% aller Daten
   
   # NAs durch Mean der Zeile ersetzen (nach gesund und krank separiert)
   for (i in 1:nrow(ALLpromotorBeta)) {       # Gesunde Daten
@@ -116,14 +117,14 @@ pVar <- (pca$sdev)^2 # Varianz berechnen
 pVarRel <- pVar
 pVarRel <- (pVar/sum(pVarRel))*100 # Umrechnen in Prozent
 plot(pVarRel, type = "l",main = "Plot of the PCA variance", xlab = "PCs", ylab = "Variance [%]", ylim = c(0,50), xaxt='n')
-axis(side = 1, at=1:10) # X-Achsenskalierung Ã¤ndern
+axis(side = 1, at=1:10) # X-Achsenskalierung ändern
 
 # ggPlot
 # Betrachtung der Patienten
-samples <- c(rep("h",5),rep("d",5)) # Erstellen einer weiteren Spalte im Datensatz fÃ¼r Farbigkeit
+samples <- c(rep("h",5),rep("d",5)) # Erstellen einer weiteren Spalte im Datensatz für Farbigkeit
 tissue <- c(rep("tonsil",3),rep("bone marrow",7))
 provider <- c(rep("J.I.Martin-Subero",3),rep("J.Wiemels",2),rep("A.Bergmann",5))
-date <- c("Aug2013","MÃ¤rz2015","Aug2015","Aug2013","MÃ¤rz2015","Mai2016","Mai2016",rep("Juli2016",3))
+date <- c("Aug2013","März2015","Aug2015","Aug2013","März2015","Mai2016","Mai2016",rep("Juli2016",3))
 
 pcax12 <- data.frame(pca$x[,c(1,2)]) # Matrix zu data.frame 
 
@@ -178,14 +179,14 @@ P_values <- rbind(Tissue_Type, Disease, Provider, Submission_Date) # Erstellen m
 library(lattice)
 P_values_batch <- P_values
 for (i in 1:nrow(P_values)) {
-    for (j in 1:ncol(P_values)) {
-        if(P_values[i,j] > 0.05){
-            P_values_batch[i,j] <- 1
-        }
-        else{
-            P_values_batch[i,j] <- 0
-        }
+  for (j in 1:ncol(P_values)) {
+    if(P_values[i,j] > 0.05){
+      P_values_batch[i,j] <- 1
     }
+    else{
+      P_values_batch[i,j] <- 0
+    }
+  }
 }
 levelplot(t(P_values_batch), xlab = "PCs", ylab = "Batches", main = "P-values for different batch effects") # Levelplot der p-values
 
@@ -193,7 +194,7 @@ levelplot(t(P_values_batch), xlab = "PCs", ylab = "Batches", main = "P-values fo
 pcar12 <- data.frame(pca$rotation[,c(1,2)])
 ggplot(pcar12, aes(x = PC1, y = PC2)) + geom_point()
 
-# Filtern der Gene mit grÃ¶ÃŸter Varianz
+# Filtern der Gene mit größter Varianz
 pcaRotVar <- apply(pca$rotation, 1, var) # Varianz der GenPCA
 pcaRotVarsort <- sort(pcaRotVar, decreasing = TRUE) # Sortierung der Varianz absteigen
 plot(pcaRotVarsort, type = "l", main = "Promoter variance for PC1", xlab = "Promoters", ylab ="PC1 variance of promoters", ylim = c(0,0.0005), xlim = c(0,2000)) # Schauen wo Elbow (hier bei ca. 700)
@@ -205,15 +206,15 @@ pcaRotAbssort <- sort(pcaRotAbs, decreasing = TRUE) # Loadings absteigend sortie
 plot(pcaRotAbssort, type = "l", main = "Loading of PC1", xlab = "Promoters", ylab = "PC1 absolute value of promoter loading", ylim = c(0,0.06), xlim = c(0,1000)) # Elbow bei unter 50 Genen (seltsam)
 abline(v=30, col = "red")
 
-# Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten Ã¼bertragen werden kann)
+# Genposition nach Varianz ordnen (damit es auf die Methylierungsdaten übertragen werden kann)
 pcaRotVar <- order(pcaRotVar, decreasing = TRUE) # Ordnen der Genpositionen nach Varianz (wie pcaRotVarsort)
 
-# LÃ¶schen der Gene hinter Varianz-elbow  
+# Löschen der Gene hinter Varianz-elbow  
 pcaRotVar <- pcaRotVar[-c(701:length(pca$rotation))] # Alle Gene hinter Elbow (kleinere Varianz als 0.0001388)
 ALLMvalueRemain <- ALLMvalue[pcaRotVar,] # Extrahieren der Mvalues nach den verbliebenen Genpositionen
 ALLMGen <- ALLMvalue[c("ENSG00000039068","ENSG00000147889","ENSG00000147883","ENSG00000129451","ENSG00000050165","ENSG00000140945","ENSG00000103490","ENSG00000196730","ENSG00000185345"),] # relevanten Gene nach Literatur
 ALLMvalueRemain <- rbind(ALLMvalueRemain,ALLMGen) # Miteinbinden der relevanten Gene (sind zuvor nicht im Dataframe gewesen)
-# ALLMvalueRemain: EnthÃ¤lt alle Gene/Patienten nach PCA
+# ALLMvalueRemain: Enthält alle Gene/Patienten nach PCA
 
 # K-Means (Silhouette-Plot)
 M_km <- kmeans(t(x = ALLMvalueRemain), centers = 2, nstart = 10)
@@ -233,7 +234,7 @@ Mvalues_noTO <- ALLMvalueRemain[,c(4:10)] # Tonsil-Patienten herausgenommen
 Mvalues_healthy <- Mvalues_noTO[,c(1,2)] # Matrix splitten in healthy und disease
 Mvalues_disease <- Mvalues_noTO[,c(3:7)]
 
-t_test <- c(1:709) # Erstellung Liste fÃ¼r p-values
+t_test <- c(1:709) # Erstellung Liste für p-values
 
 for (i in 1:length(t_test)) {
   t_test[i] <- t.test(Mvalues_healthy[i,],Mvalues_disease[i,])$p.value
@@ -264,7 +265,7 @@ levelplot(ALLBetaRemain20_plot, xlab = "Promoters", ylab = "Patients", main = "L
 # M-value 20 verbliebene Genes
 for (i in 1:20) {
   for(j in 1:10){
-    ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur fÃ¼r den Fall, dass Variablen nicht numerisch
+    ALLMvalueRemain20[i,j] <- as.numeric(ALLMvalueRemain20[i,j]) # Nur für den Fall, dass Variablen nicht numerisch
   }
 }
 ALLMvalueRemain20_plot <- as.matrix(ALLMvalueRemain20) 
@@ -284,7 +285,7 @@ rownames(ALLMvalueRemain_threshold_plot) <- c(1:nrow(ALLMvalueRemain_threshold))
 colnames(ALLMvalueRemain_threshold_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
 levelplot(ALLMvalueRemain_threshold_plot, xlab = "Promoters", ylab = "Patients", main = "Levelplot M-values of remaining promoters") # Levelplot verbliebener M-values hinter 0.05 threshold
 
-# AusgewÃ¤hlte Gene nur zum Vergleich
+# Ausgewählte Gene nur zum Vergleich
 ALLMGen_plot <- ALLMGen
 rownames(ALLMGen_plot) <- c("CDH1","p16","p15","NES-1","DKK-3","CDH13","TMS-1","DAPK-1","PRKN")
 colnames(ALLMGen_plot) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
@@ -295,27 +296,14 @@ Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold)) # Matrix transponieren da
 Tumor <- factor(c(rep("0",5),rep("1",5)))
 Lg_Mvalues <- cbind(Lg_Mvalues,Tumor) # Einbinden einer Spalte mit Bezeichnung ob Tumor ja/nein
 
-#LGpred <- as.matrix(c(1:10))  # Erstellung Matrix fÃ¼r Ergebnisse
-#for (i in 1:nrow(ALLMvalueRemain_threshold)) {
-#  glm99 <- glm(Tumor ~ Lg_Mvalues[,i], family = "binomial", data
-#               = Lg_Mvalues) # Logistical regression einzelner Gene
-#  pred <- as.matrix(predict(glm99, type = "response")) # Anwendung zur Vorhersage
-#  LGpred <- cbind(LGpred,pred) # Matrix mit allen Ergebnissen der prediction
-#}
-#View(LGpred)
-#LGpred <- LGpred[,-1]
-#
-#rownames(LGpred) <- c("Patient1_TO_Healthy","Patient2_TO_Healthy","Patient3_TO_Healthy","Patient4_BM_Healthy","Patient5_BM_Healthy","Patient6_BM_Disease","Patient7_BM_Disease","Patient8_BM_Disease","Patient9_BM_Disease","Patient10_BM_Disease")
-#levelplot(t(LGpred), xlab = "Promoters", ylab = "Patients", main = "Levelplot of logistical regression prediction") # Visualisierung
-
 Lg_Mvalues2 <- Lg_Mvalues
 healthy = which(Lg_Mvalues2$Tumor=="0")
 healthy.train = sample(healthy,floor(0.75*length(healthy)))
 cancer = which(Lg_Mvalues2$Tumor=="1")
 cancer.train = sample(cancer, floor(0.75*length(cancer)))
 train = c(healthy.train,cancer.train)
-train.set = Lg_Mvalues2[train, 1:10]
-test.set = Lg_Mvalues2[-train, 1:10]
+train.set = Lg_Mvalues2[train, 1:12]
+test.set = Lg_Mvalues2[-train, 1:12]
 Tumor2 <- c(0,0,0,1,1,1)
 regression_model2 <- glm(formula = Tumor2 ~ ., family = binomial(link = "logit"), data = train.set)
 predict2 <- predict(regression_model2, newdata = test.set, type = "response")
