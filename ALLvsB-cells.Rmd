@@ -258,8 +258,7 @@ for (i in 1:nrow(ALLpromotorBeta)) {
 **Normalization**
 
 In the last step of quality control the Beta-values were converted to M-values.
-M-values provide a much better performance for detection rate and true positive rate at highly methylated and highly umethylated CpG sites. The Beta-values have a higher statistical spread (heteroscedasticity) outside the middle methylation range. So the M-values provide a more accurate estimation of the methylation status (Pan Du *et al.*, 2010). However the M-values have no direct biological interpretation, whereas the Beta-values relate roughly to the methylation percentage. For this reason we also looked at the Beta-values in later on analysis.
-
+M-values provide a much better performance for detection rate and true positive rate at highly methylated and highly umethylated CpG sites. The Beta-values have a higher statistical spread (heteroscedasticity) outside the middle methylation range. So the M-values provide a more accurate estimation of the methylation status (Du *et al.*, 2010). However the M-values have no direct biological interpretation, whereas the Beta-values relate roughly to the methylation percentage. For this reason we also looked at the Beta-values in later on analysis.
 ```{r Converting Beta- to M-values}
 ALLMvalue <- ALLpromotorBeta                 
 for (i in 1:nrow(ALLMvalue)) {
@@ -286,7 +285,6 @@ First the actual PCA is executed. The transposed matrix is used in order to obta
 library(ggplot2)
 pca <- prcomp(t(ALLMvalue))
 ```
-
 
 Next the variance of the PCs is plotted to determine the elbow and therefore the relevant PCs. 
 ```{r Plotting variance of PCS}
@@ -442,7 +440,9 @@ The silhouette plot and k-means clustering data showed a good seperation of the 
 
 In order to find the promotors which are significantly differentially methylated the 709 filtered promoters are checked via t-test. This is the best method to find recurrent differences since it uses the mean of each patient group and therefore a differential methylation has to occur in most patients to be significant. If there is a DMR in just one patient it will not be recognized as recurrent and will therefore not be significant since the other patients of the group equalize its differentially methylated status through the mean. 
 
+
 **Preparing for the t-test**
+
 First the samples originating from the tonsil of the control group patients were removed from the analysis since none grouped with the samples derived from the bone marrow. Additionally all samples for the diseased group originated from the bone marrow which would lead to false results when comparing to a different tissue type. Then the M-values were splitted into their respective health groups healthy and diseased to allow for the t-test.
 ```{r Excluding tonsil samples}
 Mvalues_noTO <- ALLMvalueRemain[,c(4:10)]
@@ -554,25 +554,25 @@ main = "Levelplot M-values of selected genes/promoters")
 ###Step4 - Logistical regression
 
 As a final step a model which could predict the cancer status of a patient using logistical regression was created. Logistical regression was chosen over linear regression since the latter is much less accurate when it comes to binary events such as methylation. Therefore a logistically regressed model would achieve better results predicting a patients disease status using methylation data. 
-Using the previously defined 12 significant genes a dataframe was created which also defined the health status of the patients data used to create the model. Diseased patients were defined as "1" and healthy patients as "0". Therefore upon prediction a value higher than 0.5 would indicate a cancerous state versus a healthy state if the predicted value is lower than 0.5.
-First the dataframe was prepared and the additional column with the health status was added.
+Using the previously defined 12 significant promoters a dataframe was created which also defined the health status of the patients data used to create the model. Diseased patients were defined as "1" and healthy patients as "0". Therefore upon prediction a value higher than 0.5 would indicate a cancerous state versus a healthy state if the predicted value is lower than 0.5.
+First the dataframe was prepared and the additional column with the health status was added. Next 75% of the healthy and diseased patients each were selected (rounded down) and their respective M-values were stored in a vector train. As a last step an extra column is created to define the health status of the patients in the vector train.
 ```{r Preparing logistical regression}
 Lg_Mvalues <- data.frame(t(ALLMvalueRemain_threshold))
 Tumor <- factor(c(rep("0",5),rep("1",5)))
 Lg_Mvalues <- cbind(Lg_Mvalues,Tumor)
-```
-
-WTF is this Wiebke pls help?
-```{r Regressing logistically and predicting health status}
 Lg_Mvalues2 <- Lg_Mvalues
 healthy = which(Lg_Mvalues2$Tumor=="0")
 healthy.train = sample(healthy,floor(0.75*length(healthy)))
 cancer = which(Lg_Mvalues2$Tumor=="1")
 cancer.train = sample(cancer, floor(0.75*length(cancer)))
 train = c(healthy.train,cancer.train)
-train.set = Lg_Mvalues2[train, 1:10]
-test.set = Lg_Mvalues2[-train, 1:10]
+train.set = Lg_Mvalues2[train, 1:12]
+test.set = Lg_Mvalues2[-train, 1:12]
 Tumor2 <- c(0,0,0,1,1,1)
+```
+
+Subsequently the model was created and the predicted values were stored in predict2.
+```{r Regressing logistically and predicting health status}
 regression_model2 <- glm(formula = Tumor2 ~ ., family = binomial(link = "logit"), data = train.set)
 predict2 <- predict(regression_model2, newdata = test.set, type = "response")
 ```
@@ -599,7 +599,6 @@ Subsequently the 20 promoters with the lowest p-values from the t-test were isol
 
 ###Discussion
 
-
 The samples from patient 1 – 3 originated from tonsil tissue, the other samples from the bone marrow. Lokk K. *et al.* examined differential methylation between 17 studied tissues and observed significant biological differences. The hierarchical clustering of the 17 tissues studied showed a strong correlation between similar tissue types e.g. between red and yellow bone marrow and a low correlation between different tissue types e.g. tonsil and bone marrow (Lokk K. *et al.*, 2014). Therefore the tonsil samples were excluded in most analyses. Additionally the logistical regression predicted some healthy tonsil samples as tumour depicting again the significant difference between the tissues.
 
 In the following table the function of the genes linked to the analysed 20 most significant promoters and their possible role in ALL was researched. The main source was the genome browser http://www.ensembl.org. From now on genes linked to the analysed promoters are simply referenced as genes.
@@ -619,3 +618,23 @@ One problem in the analysis was the t-test. The mean methylation status of ALL p
 As shown in the plot “Levelplot m-values of selected Genes”, the ALL associated gene PRKN (PARKIN) is strongly methylated in Patient 9. But due to lower methylation levels in the other diseased patients this gene does not appear in the significant genes after the t-test. Therefore this analysis only shows general trends in the small group of 10 patients and does not allow for individual conclusions. Important promotors for biomarker development might be missed.
 
 In order to develop biomarkers for disease prognosis a much larger group containing many more patients would be needed. Additionally all samples should be taken from the same tissue type as to avoid the aforementioned problem of biological differences between different tissues. Only upon uniting these factors an accurate prognosis could be developed using methylation levels of specific promoters.
+
+
+
+###References
+
+Du P, Zhang X, Huang C-C, Jafari N, Kibbe WA, Hou  L, Lin SL (2010). Comparison of Beta-value and M-value methods for quantifying methylation levels by microarray analysis. BMC Bioinformatics **11**
+
+Irving JAE, Matheson E, Minto L, Blair H, Case M, Halsey C, Swidenbank I, Ponthan F, Kirschner-Schwabe R, Groeneveld-Krentz S, Hof J *et al.* (2014). Ras pathway mutations are prevalent in relapsed childhood acute lymphoblastic leukemia and confer sensitivity to MEK inhibition. Blood **124**
+
+Knight T and Irving JAE (2014). Ras/Raf/MEK/ERK Pathway Activation in Childhood Acute Lymphoblastic Leukemia and Its Therapeutic Targeting. Frontiers in Oncology **4**
+
+Lokk K, Modhukur V, Rajashekar B, Märtens K, Mägi R, Kolde R, Koltšina M, Nilsson TK, Vilo J, Salumets A, Tõnisson N (2014). DNA methylome profiling of human tissues identifies global and tissue-specific methylation patterns. Genome Biology **15**
+
+Pui CH, Carroll WL, Meshinchi S, Arceci RJ (2011). Biology, risk stratification, and therapy of pediatric acute leukemias: an update. Journal of Clinical Oncology **29**
+
+Roman-Gomez J, Jimenez-Velasco A, Castillejo JA, Agirre X, Barrios M, Navarro G, Molina FJ, Calasanz MJ, Prosper F, Heiniger A, Torres A (2004). Promoter hypermethylation of cancer-related genes: a strong independent prognostic factor in acute lymphoblastic leukemia. Blood **104**
+
+Russo AA, Tong L, Lee JO, Jeffrey PD, Pavletich NP (1998). Structural basis for inhibition of the cyclin-dependent kinase Cdk6 by the tumour suppressor p16INK4a. Nature **395**
+
+Terwillinger T and Abdul-Hay M (2017). Acute lymphoblastic leukemia: a comprehensive review and 2017 update. Blood Cancer Journal **7**
