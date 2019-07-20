@@ -18,12 +18,12 @@ These CpGs are normally methylated. The exception to this are CpG-rich promoters
 
 **Tumour type**
 
-The type of cancer focussed here is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75% of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60% of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). 
+The type of cancer focussed here is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75% of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60% of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). Due to ALL's heterogeneity there are no genes which are always hypo- or hypermethylated. However there are several important genes which are good risk indicators making it possible to predict the severity of the cancer at hand (Roman-Gomez *et al.*, 2004)
 
 
 **Biological question - goal**
 
-Combining the need for treatment of mentioned tumour and the knowledge of methylation status this project is comparing genome-wide methylation data of diseased and healthy patients. The samples were either taken from the bone marrow (healthy and diseased) or the tonsils (healthy) of 0-18 year old patients. The identification of recurrent genetic changes can help for refined individual disease prognosis and management. In this project the focus lies on the methylation status of promotors in ALL related genes since methylation of promoters regulate their expression. Based on a publication of Roman-Gomez the methylation status of the 15 mentioned genes is validated and further search for promoters and affiliated genes relevant for ALL is conducted. The data opens the possibility for new potential biomarkers for ALL risk prognosis and therapy.
+Combining the need for treatment of mentioned tumour and the knowledge of methylation status this project is comparing genome-wide methylation data of diseased and healthy patients. The samples were either taken from the bone marrow (healthy and diseased) or the tonsils (healthy) of 0-18 year old patients. The identification of recurrent genetic methylation changes can help for refined individual disease prognosis and management. In this project the focus lies on the methylation status of promotors in ALL related genes since methylation of promoters regulate their expression. Based on a publication of Roman-Gomez the methylation status of the 15 mentioned genes is validated and further search for promoters and affiliated genes relevant for ALL is conducted. The data opens the possibility for new potential biomarkers for ALL risk prognosis and therapy.
 
 
 
@@ -143,7 +143,7 @@ for (i in 1:nrow(ALLpromotorBeta)) {
 }
 ```
 
-After execution of this command around 7.9 % of the promoter regions were removed due to 4 or 5 NA in healthy patients Beta-values.
+After execution of this command around 1.2 % of the promoter regions were removed due to 4 or 5 NA in healthy patients Beta-values.
 ```
 for (i in 1:nrow(ALLpromotorBeta)) {
   for (j in 1:ncol(ALLpromotorBeta)) {
@@ -154,7 +154,7 @@ for (i in 1:nrow(ALLpromotorBeta)) {
 }
 ```
 
-After elimination through diseased patients another 1 % of promoter regions were removed. In total 8.9% (5225) of the promoter regions were removed. 
+After elimination through diseased patients another 1.2 % of promoter regions were removed. In total 2.4 % of the promoter regions were removed. 
 
 
 **Replacing residual NAs by the mean of the patient group**
@@ -562,7 +562,7 @@ Tumor <- factor(c(rep("0",5),rep("1",5)))
 Lg_Mvalues <- cbind(Lg_Mvalues,Tumor)
 ```
 
-Next a matrix was created in which the predicted values were stored. Then each of the significant genes was used for logistical regression and prediction of health status. Once all prediction values were stored in the matrix the first column used to create the matrix was removed.
+WTF is this Wiebke pls help?
 ```{r Regressing logistically and predicting health status}
 Lg_Mvalues2 <- Lg_Mvalues
 healthy = which(Lg_Mvalues2$Tumor=="0")
@@ -585,12 +585,37 @@ levelplot(t(predict2), xlab = "Promoters", ylab = "Patients", main = "Levelplot 
 Unfortunately the model was unreliable in predicting the health status of the patients. This was mostly related to the very low amount of patients used for the creation of this model.
 
 
-###Results?
 
-wip?
+###Results
+
+During quality control 6.3 % of the Beta-values were replaced by NA due to too high or too low coverage. Next 2.4 % of promoter regions were removed since there was not enough information contained in the Beta-values (4 or 5 out of 5 NA per patient group). In total approximately 8.7 % of the data was lost during QC. Finally the Beta-values were converted to M-values for further analysis.
+Next a PCA was performed and according to the elbow in graph “Plot of PCA variance” the first three PCAs explained most of the variance and were chosen for downstream analysis. 
+The following Wilcoxon and Kruskal-Wallis test showed that only PC2 had a batch effect in tissue type, which reflected the observation that different tissue types are differentially methylated.
+For further analysis PC1 was chosen because it explained most of the variance and had no significant batch effect. After plotting the variance of the promoters of PC1,  700 promoters were filtered since they were located left of the elbow. The remaining 9 promoters from the literature research were also added to the filtered promoters.
+The performed k-means clustering before the following t-test showed good separation of healty and diseased patients into two clusters.
+Subsequently the 20 promoters with the lowest p-values from the t-test were isolated for in depth analysis. Additionally the significant ($\alpha = 0.05$) promoters were also isolated and used for a following logistical regression. The model showed ambigious results upon prediction of the health status of the patients at hand.
 
 
 
-###Conclusion
+###Discussion
 
-wip
+
+The samples from patient 1 – 3 originated from tonsil tissue, the other samples from the bone marrow. Lokk K. *et al.* examined differential methylation between 17 studied tissues and observed significant biological differences. The hierarchical clustering of the 17 tissues studied showed a strong correlation between similar tissue types e.g. between red and yellow bone marrow and a low correlation between different tissue types e.g. tonsil and bone marrow (Lokk K. *et al.*, 2014). Therefore the tonsil samples were excluded in most analyses. Additionally the logistical regression predicted some healthy tonsil samples as tumour depicting again the significant difference between the tissues.
+
+In the following table the function of the genes linked to the analysed 20 most significant promoters and their possible role in ALL was researched. The main source was the genome browser http://www.ensembl.org. From now on genes linked to the analysed promoters are simply referenced as genes.
+
+TABLE WITH 20 GENES
+
+The analysis of 20 genes has revealed that 8 out of the 20 genes might be relevant to ALL. 2 genes of these 8 may be cancer associated (genes regulate processes that may have a role in carcinogenesis but are not currently associated with cancer), 4 genes are certainly cancer associated and 2 genes are specifically associated to ALL. 
+
+In the following the two ALL related Genes are analyzed in detail:
+Gene 7 (see table) RAB L2B is a member of RAS oncogene family like 2B. The Ras-related superfamily of guanine nucleotide binding proteins play an important role in the RAF-MEK-ERK signaling pathway. Deregulation of RAF-MEK-ERK signaling is found in cancer cells and cause growth factor independent proliferation of hemapoietic progenitors, which arises through constitutive activation of the G protein. Aberrant signaling of the RAF-MEK-ERK pathway was recognized as a recurring molecular event in childhood acute lymphoblastic leukemia. (Case M. *et al.*, 2008)
+The Levelplot of M-values (see Levelplot of M-values of 20 remaining gens) show a significantly lower methylation level in patients with ALL when compared to healthy patients. This leads to an aberrant activation of the RAF-MEK-ERK signaling pathway. Also a high activation of rat sarcoma pathway (RAS) leads to a relapse of the acute lymphoblastic leukemia of the B-cell precursor in childhood. The prognosis is poor for most children who relapse with acute lymphoblastic leukemia (ALL). The gene 7 can be a biomarker for novel therapies to improve outcome. (Irving *et al.*, 2014) 
+
+Gene 17 (see table) CDKN2A (cyclin dependent kinase inhibitor 2A) is a tumour suppressor gene, which encodes for p16. The cyclin-dependent kinases control the G1 phase of the cell cycle and their inhibitor, the p16INK4a tumor suppressor, plays a central role in cell proliferation and tumourigenesis. The INK4 inhibitors distort the catalytic gap of the kinase and interfere with ATP binding, resulting in the inhibition of the cyclin complexes. (Russo AA. *et al.*, 1998)
+The Levelplot of M-values (see Levelplot of M-values of 20 remaining gens) show slightly higher methylation level in patients with ALL compared to healthy patients. The hypermethylation of p16 leads to epigenetic silencing of the tumor-related gene. This leads to a significant change in the development of cancer und acts as a potential Biomarker for risk prognosis and therapy. (Roman-Gomez *et al.*, 2004)
+
+One problem in the analysis was the t-test. The mean methylation status of ALL patients versus healthy patients was compared. Therefore general trends could only be seen when all of the healthy and diseased patients showed a differential methylation.
+As shown in the plot “Levelplot m-values of selected Genes”, the ALL associated gene PRKN (PARKIN) is strongly methylated in Patient 9. But due to lower methylation levels in the other diseased patients this gene does not appear in the significant genes after the t-test. Therefore this analysis only shows general trends in the small group of 10 patients and does not allow for individual conclusions. Important promotors for biomarker development might be missed.
+
+In order to develop biomarkers for disease prognosis a much larger group containing many more patients would be needed. Additionally all samples should be taken from the same tissue type as to avoid the aforementioned problem of biological differences between different tissues. Only upon uniting these factors an accurate prognosis could be developed using methylation levels of specific promoters.
