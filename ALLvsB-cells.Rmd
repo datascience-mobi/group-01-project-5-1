@@ -18,7 +18,7 @@ These CpGs are normally methylated. The exception to this are CpG-rich promoters
 
 **Tumour type**
 
-The type of cancer focussed here is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75% of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60% of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). Due to ALL's heterogeneity there are no genes which are always hypo- or hypermethylated. However there are several important genes which are good risk indicators making it possible to predict the severity of the cancer at hand (Roman-Gomez *et al.*, 2004)
+The type of cancer focussed here is acute lymphoblastic leukemia (ALL) arising from the B-cell line, which is the most common form with 75 % of ALL cases (Terwillinger and Abdul-Hay, 2017). It is a very aggressive form of leukemia. Approximately 60 % of leukemia-diseases in children under 20 years are due to ALL making it the predominant form of leukemia (Pui *et al.*, 2011). Due to ALL's heterogeneity there are no genes which are always hypo- or hypermethylated. However there are several important genes which are good risk indicators making it possible to predict the severity of the cancer at hand (Roman-Gomez *et al.*, 2004)
 
 
 **Biological question - goal**
@@ -75,7 +75,7 @@ If there are very many (e.g. >10000) reads per base the result could be altered 
 Therefore it is important to find a suited threshold for the coverages in order to assure the significance of the Beta-values which are directly depending on the sequencing accuracy.
 Upon literature reseach 14 promoters for the genes (CDH1, CDKN2A, CDKN2B, CDKN1C, KLK10, DKK3, CDH13, PYCARD, DAPK1, PARKIN, PTEN, p73, APAF1, LATS1) are defined as "relevant" for our tumour type (Roman-Gomez *et al.*, 2004). These are from now on referred to as selected genes/promoters. In order to find an upper threshold several factors were taken into account. First the amount of the selected promoters which were removed for different thresholds was checked. Even with a threshold of 99% of the coverage 3 promoters for genes (p73, APAF1, LATS1) always only had NA for the coverage values (any value outside of thresholds = NA). 
 Next the percentage of the remaining regions which were removed was calculated, while still keeping as many selected promoters additionally reducing the coverage as much as needed to avoid PCR mediated errors.
-Finally a lower threshold of 1.5 % (28) and an upper threshold of 98.5 % (7753) of the coverage values were selected since only 10 % of the data and 2 additional selected promoter regions (p57, PTEN) were rejected. It formed the best compromise between the aforementioned factors.
+Finally a lower threshold of 1.5 % (28) and an upper threshold of 98.5 % (7753) of the coverage values were selected since only a maximum of 10 % of the Beta-values should be rejected. The actual deleted 6.3 % together with five selected genes formed the best compromise between the aforementioned factors.
 Additionally an extra variable ALLpromotorCov1 was defined which was subsequnetly used to compute the amount of data lost during the next steps of data cleaning.
 ```{r Checking for quantiles}
 quantile(ALLCovMeans, probs = c(0.05, 0.95),na.rm = TRUE)
@@ -589,7 +589,7 @@ Unfortunately the model was unreliable in predicting the health status of the pa
 ###Results
 
 During quality control 6.3 % of the Beta-values were replaced by NA due to too high or too low coverage. Next 2.4 % of promoter regions were removed since there was not enough information contained in the Beta-values (4 or 5 out of 5 NA per patient group). In total approximately 8.7 % of the data was lost during QC. Finally the Beta-values were converted to M-values for further analysis.
-Next a PCA was performed and according to the elbow in graph “Plot of PCA variance” the first three PCAs explained most of the variance and were chosen for downstream analysis. 
+Next a PCA was performed and according to the elbow in graph "Plot of PCA variance" the first three PCAs explained most of the variance and were chosen for downstream analysis. 
 The following Wilcoxon and Kruskal-Wallis test showed that only PC2 had a batch effect in tissue type, which reflected the observation that different tissue types are differentially methylated.
 For further analysis PC1 was chosen because it explained most of the variance and had no significant batch effect. After plotting the variance of the promoters of PC1,  700 promoters were filtered since they were located left of the elbow. The remaining 9 promoters from the literature research were also added to the filtered promoters.
 The performed k-means clustering before the following t-test showed good separation of healty and diseased patients into two clusters.
@@ -599,7 +599,7 @@ Subsequently the 20 promoters with the lowest p-values from the t-test were isol
 
 ###Discussion
 
-The samples from patient 1 – 3 originated from tonsil tissue, the other samples from the bone marrow. Lokk K. *et al.* examined differential methylation between 17 studied tissues and observed significant biological differences. The hierarchical clustering of the 17 tissues studied showed a strong correlation between similar tissue types e.g. between red and yellow bone marrow and a low correlation between different tissue types e.g. tonsil and bone marrow (Lokk K. *et al.*, 2014). Therefore the tonsil samples were excluded in most analyses. Additionally the logistical regression predicted some healthy tonsil samples as tumour depicting again the significant difference between the tissues.
+The samples from patient 1 - 3 originated from tonsil tissue, the other samples from the bone marrow. Lokk K. *et al.* examined differential methylation between 17 studied tissues and observed significant biological differences. The hierarchical clustering of the 17 tissues studied showed a strong correlation between similar tissue types e.g. between red and yellow bone marrow and a low correlation between different tissue types e.g. tonsil and bone marrow (Lokk K. *et al.*, 2014). Therefore the tonsil samples were excluded in most analyses. Additionally the logistical regression predicted some healthy tonsil samples as tumour depicting again the significant difference between the tissues.
 
 In the following table the function of the genes linked to the analysed 20 most significant promoters and their possible role in ALL was researched. The main source was the genome browser http://www.ensembl.org. From now on genes linked to the analysed promoters are simply referenced as genes.
 
@@ -615,7 +615,7 @@ Gene 17 (see table) CDKN2A (cyclin dependent kinase inhibitor 2A) is a tumour su
 The Levelplot of M-values (see Levelplot of M-values of 20 remaining gens) show slightly higher methylation level in patients with ALL compared to healthy patients. The hypermethylation of p16 leads to epigenetic silencing of the tumor-related gene. This leads to a significant change in the development of cancer und acts as a potential Biomarker for risk prognosis and therapy. (Roman-Gomez *et al.*, 2004)
 
 One problem in the analysis was the t-test. The mean methylation status of ALL patients versus healthy patients was compared. Therefore general trends could only be seen when all of the healthy and diseased patients showed a differential methylation.
-As shown in the plot “Levelplot m-values of selected Genes”, the ALL associated gene PRKN (PARKIN) is strongly methylated in Patient 9. But due to lower methylation levels in the other diseased patients this gene does not appear in the significant genes after the t-test. Therefore this analysis only shows general trends in the small group of 10 patients and does not allow for individual conclusions. Important promotors for biomarker development might be missed.
+As shown in the plot "Levelplot m-values of selected Genes", the ALL associated gene PRKN (PARKIN) is strongly methylated in Patient 9. But due to lower methylation levels in the other diseased patients this gene does not appear in the significant genes after the t-test. Therefore this analysis only shows general trends in the small group of 10 patients and does not allow for individual conclusions. Important promotors for biomarker development might be missed.
 
 In order to develop biomarkers for disease prognosis a much larger group containing many more patients would be needed. Additionally all samples should be taken from the same tissue type as to avoid the aforementioned problem of biological differences between different tissues. Only upon uniting these factors an accurate prognosis could be developed using methylation levels of specific promoters.
 
@@ -627,9 +627,9 @@ Du P, Zhang X, Huang C-C, Jafari N, Kibbe WA, Hou  L, Lin SL (2010). Comparison 
 
 Irving JAE, Matheson E, Minto L, Blair H, Case M, Halsey C, Swidenbank I, Ponthan F, Kirschner-Schwabe R, Groeneveld-Krentz S, Hof J *et al.* (2014). Ras pathway mutations are prevalent in relapsed childhood acute lymphoblastic leukemia and confer sensitivity to MEK inhibition. Blood **124**
 
-Knight T and Irving JAE (2014). Ras/Raf/MEK/ERK Pathway Activation in Childhood Acute Lymphoblastic Leukemia and Its Therapeutic Targeting. Frontiers in Oncology **4**
+Case M, Matheson E, Minto L, Hassan R, Harrison CJ, Brown N, Bailey S, Vormoor J, Hall AG, Irving JAE (2008). Mutation of Genes Affecting the RAS Pathway Is Common in Childhood Acute Lymphablastic Leukemia. Cancer Research **68**
 
-Lokk K, Modhukur V, Rajashekar B, Märtens K, Mägi R, Kolde R, Koltšina M, Nilsson TK, Vilo J, Salumets A, Tõnisson N (2014). DNA methylome profiling of human tissues identifies global and tissue-specific methylation patterns. Genome Biology **15**
+Lokk K, Modhukur V, Rajashekar B, M�rtens K, M�gi R, Kolde R, Koltsina M, Nilsson TK, Vilo J, Salumets A, T�nisson N (2014). DNA methylome profiling of human tissues identifies global and tissue-specific methylation patterns. Genome Biology **15**
 
 Pui CH, Carroll WL, Meshinchi S, Arceci RJ (2011). Biology, risk stratification, and therapy of pediatric acute leukemias: an update. Journal of Clinical Oncology **29**
 
