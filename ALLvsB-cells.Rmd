@@ -623,11 +623,11 @@ In order to develop biomarkers for disease prognosis a much larger group contain
 
 ###References
 
+Case M, Matheson E, Minto L, Hassan R, Harrison CJ, Brown N, Bailey S, Vormoor J, Hall AG, Irving JAE (2008). Mutation of Genes Affecting the RAS Pathway Is Common in Childhood Acute Lymphablastic Leukemia. Cancer Research **68**
+
 Du P, Zhang X, Huang C-C, Jafari N, Kibbe WA, Hou  L, Lin SL (2010). Comparison of Beta-value and M-value methods for quantifying methylation levels by microarray analysis. BMC Bioinformatics **11**
 
 Irving JAE, Matheson E, Minto L, Blair H, Case M, Halsey C, Swidenbank I, Ponthan F, Kirschner-Schwabe R, Groeneveld-Krentz S, Hof J *et al.* (2014). Ras pathway mutations are prevalent in relapsed childhood acute lymphoblastic leukemia and confer sensitivity to MEK inhibition. Blood **124**
-
-Case M, Matheson E, Minto L, Hassan R, Harrison CJ, Brown N, Bailey S, Vormoor J, Hall AG, Irving JAE (2008). Mutation of Genes Affecting the RAS Pathway Is Common in Childhood Acute Lymphablastic Leukemia. Cancer Research **68**
 
 Lokk K, Modhukur V, Rajashekar B, Märtens K, Mägi R, Kolde R, Koltsina M, Nilsson TK, Vilo J, Salumets A, Tõnisson N (2014). DNA methylome profiling of human tissues identifies global and tissue-specific methylation patterns. Genome Biology **15**
 
